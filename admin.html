@@ -279,8 +279,8 @@ function calcRow(r, idx) {
   let statusKey = 'active';
   if (daysToEnd!==null && daysToEnd<0) statusKey='expired';
   else {
-    const e1s = eval1 && daysDiff(TODAY,eval1)>=0 && daysDiff(TODAY,eval1)<=30;
-    const e3s = eval3 && daysDiff(TODAY,eval3)>=0 && daysDiff(TODAY,eval3)<=30;
+    const e1s = eval1 && daysDiff(TODAY,eval1)>=0 && daysDiff(TODAY,eval1)<=60;
+    const e3s = eval3 && daysDiff(TODAY,eval3)>=0 && daysDiff(TODAY,eval3)<=60;
     if (e1s||e3s) statusKey='eval30';
     else if (daysToEnd!==null && daysToEnd<=180) statusKey='recruit180';
   }
@@ -307,11 +307,11 @@ function statusBadge(row) {
 function evalBadge(evalDate, st) {
   if (!evalDate) return '<span class="eval-na">—</span>';
   const d = daysDiff(TODAY, evalDate);
-  let dateCls = d<0?'eval-done': d<=30?'eval-soon':'eval-pending';
+  let dateCls = d<0?'eval-done': d<=60?'eval-soon':'eval-pending';
   let stBadge = '';
   if (st==='อยู่ระหว่างประเมิน') stBadge=`<span class="badge b-purple" style="font-size:10px">กำลังดำเนินการ</span>`;
   else if (st==='ประเมินเสร็จสิ้น') stBadge=`<span class="badge b-teal" style="font-size:10px">✓ เสร็จสิ้น</span>`;
-  return `<div class="eval-cell"><span class="${dateCls}">${d<0?'✓ ':d<=30?'⚠ ':''} ${fmtDate(evalDate)}</span>${stBadge}</div>`;
+  return `<div class="eval-cell"><span class="${dateCls}">${d<0?'✓ ':d<=60?'⚠ ':''} ${fmtDate(evalDate)}</span>${stBadge}</div>`;
 }
 
 function progBar(row) {
@@ -337,9 +337,9 @@ function renderDashboard(rows) {
     else if (r.statusKey==='expired') alerts.push({cls:'ac-red',icon:'🔴',title:`หมดวาระแล้ว ${Math.abs(r.daysToEnd)} วัน`,sub:`${r['ตำแหน่ง']} — ${r['ชื่อ-สกุล']}`});
     else if (r.statusKey==='recruit180') alerts.push({cls:'ac-amber',icon:'🟡',title:`ใกล้หมดวาระ เหลือ ${r.daysToEnd} วัน (${fmtDate(r.end)})`,sub:`${r['ตำแหน่ง']} — ${r['ชื่อ-สกุล']}`});
     if (r.stEval1==='อยู่ระหว่างประเมิน') alerts.push({cls:'ac-blue',icon:'📋',title:`อยู่ระหว่างประเมิน 1 ปี`,sub:`${r['ตำแหน่ง']} — ${r['ชื่อ-สกุล']}`});
-    else if (r.eval1){const d=daysDiff(TODAY,r.eval1);if(d>=0&&d<=30) alerts.push({cls:'ac-blue',icon:'🔵',title:`ประเมิน 1 ปี ใน ${d} วัน (${fmtDate(r.eval1)})`,sub:`${r['ตำแหน่ง']} — ${r['ชื่อ-สกุล']}`});}
+    else if (r.eval1){const d=daysDiff(TODAY,r.eval1);if(d>=0&&d<=60) alerts.push({cls:'ac-blue',icon:'🔵',title:`ประเมิน 1 ปี ใน ${d} วัน (${fmtDate(r.eval1)})`,sub:`${r['ตำแหน่ง']} — ${r['ชื่อ-สกุล']}`});}
     if (r.stEval3==='อยู่ระหว่างประเมิน') alerts.push({cls:'ac-blue',icon:'📋',title:`อยู่ระหว่างประเมิน 3 ปี`,sub:`${r['ตำแหน่ง']} — ${r['ชื่อ-สกุล']}`});
-    else if (r.eval3){const d=daysDiff(TODAY,r.eval3);if(d>=0&&d<=30) alerts.push({cls:'ac-blue',icon:'🔵',title:`ประเมิน 3 ปี ใน ${d} วัน (${fmtDate(r.eval3)})`,sub:`${r['ตำแหน่ง']} — ${r['ชื่อ-สกุล']}`});}
+    else if (r.eval3){const d=daysDiff(TODAY,r.eval3);if(d>=0&&d<=60) alerts.push({cls:'ac-blue',icon:'🔵',title:`ประเมิน 3 ปี ใน ${d} วัน (${fmtDate(r.eval3)})`,sub:`${r['ตำแหน่ง']} — ${r['ชื่อ-สกุล']}`});}
   });
 
   document.getElementById('main').innerHTML = `
@@ -347,7 +347,7 @@ function renderDashboard(rows) {
     <div class="metric m-total"><div class="m-label">ทั้งหมด</div><div class="m-value">${rows.length}</div><div class="m-sub">ตำแหน่ง</div></div>
     <div class="metric m-expired"><div class="m-label">หมดวาระ</div><div class="m-value">${expired}</div><div class="m-sub">รอการสรรหา</div></div>
     <div class="metric m-soon"><div class="m-label">ใกล้หมดวาระ</div><div class="m-value">${recruit180}</div><div class="m-sub">≤ 180 วัน</div></div>
-    <div class="metric m-eval"><div class="m-label">ใกล้รอบประเมิน</div><div class="m-value">${eval30}</div><div class="m-sub">≤ 30 วัน</div></div>
+    <div class="metric m-eval"><div class="m-label">ใกล้รอบประเมิน</div><div class="m-value">${eval30}</div><div class="m-sub">≤ 60 วัน</div></div>
     <div class="metric m-ok"><div class="m-label">ปกติ</div><div class="m-value">${active}</div><div class="m-sub">ตำแหน่ง</div></div>
   </div>
   <div class="sec-title">🔔 แจ้งเตือนเร่งด่วน</div>
@@ -364,7 +364,7 @@ function renderDashboard(rows) {
       <option value="inprogress-recruit">อยู่ระหว่างสรรหา</option>
       <option value="recruit180">ใกล้หมดวาระ ≤ 180 วัน</option>
       <option value="inprogress-eval">อยู่ระหว่างประเมิน</option>
-      <option value="eval30">ใกล้รอบประเมิน ≤ 30 วัน</option>
+      <option value="eval30">ใกล้รอบประเมิน ≤ 60 วัน</option>
       <option value="active">ปกติ</option>
     </select>
     <input type="text" id="f-search" placeholder="ค้นหาตำแหน่ง / ชื่อ…" oninput="applyFilter()">
@@ -485,7 +485,7 @@ function openPanel(idx) {
     if (st==='ประเมินเสร็จสิ้น') return 'done';
     if (st==='อยู่ระหว่างประเมิน') return 'active';
     if (daysLeft!==null && daysLeft<0) return 'warn';
-    if (daysLeft!==null && daysLeft<=30) return 'warn';
+    if (daysLeft!==null && daysLeft<=60) return 'warn';
     return 'pending';
   }
   function recruitDot(st, dEnd) {
@@ -521,7 +521,7 @@ function openPanel(idx) {
         <div class="tl-content">
           <div class="tl-title">ประเมินผล ครั้งที่ 1 (1 ปี)</div>
           <div class="tl-date">${fmtDate(r.eval1)}</div>
-          <div class="tl-days">${dE1===null?'':dE1<0?`<span style="color:var(--text-3)">ผ่านมาแล้ว ${Math.abs(dE1)} วัน</span>`:dE1===0?`<span style="color:var(--red)">วันนี้</span>`:`<span style="color:${dE1<=30?'var(--red)':'var(--text-2)'}">อีก ${dE1} วัน</span>`}</div>
+          <div class="tl-days">${dE1===null?'':dE1<0?`<span style="color:var(--text-3)">ผ่านมาแล้ว ${Math.abs(dE1)} วัน</span>`:dE1===0?`<span style="color:var(--red)">วันนี้</span>`:`<span style="color:${dE1<=60?'var(--red)':'var(--text-2)'}">อีก ${dE1} วัน</span>`}</div>
           ${r.stEval1!=='—'?`<div style="margin-top:4px">${evalBadge(r.eval1,r.stEval1)}</div>`:''}
         </div>
       </div>
@@ -530,7 +530,7 @@ function openPanel(idx) {
         <div class="tl-content">
           <div class="tl-title">ประเมินผล ครั้งที่ 2 (3 ปี)</div>
           <div class="tl-date">${fmtDate(r.eval3)}</div>
-          <div class="tl-days">${dE3===null?'':dE3<0?`<span style="color:var(--text-3)">ผ่านมาแล้ว ${Math.abs(dE3)} วัน</span>`:dE3===0?`<span style="color:var(--red)">วันนี้</span>`:`<span style="color:${dE3<=30?'var(--red)':'var(--text-2)'}">อีก ${dE3} วัน</span>`}</div>
+          <div class="tl-days">${dE3===null?'':dE3<0?`<span style="color:var(--text-3)">ผ่านมาแล้ว ${Math.abs(dE3)} วัน</span>`:dE3===0?`<span style="color:var(--red)">วันนี้</span>`:`<span style="color:${dE3<=60?'var(--red)':'var(--text-2)'}">อีก ${dE3} วัน</span>`}</div>
           ${r.stEval3!=='—'?`<div style="margin-top:4px">${evalBadge(r.eval3,r.stEval3)}</div>`:''}
         </div>
       </div>
