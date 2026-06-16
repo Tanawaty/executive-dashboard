@@ -1,0 +1,639 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin — วาระการดำรงตำแหน่งผู้บริหาร</title>
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --navy:#1a2e4a;--navy-mid:#24426b;--blue:#2e6fad;--blue-lt:#ddeeff;
+  --teal:#1d8a74;--teal-lt:#d8f2ec;--amber:#b86a00;--amber-lt:#fef0d6;
+  --purple:#5b3fa6;--purple-lt:#ede9ff;
+  --red:#b83232;--red-lt:#fde8e8;--gray:#f4f6f9;--border:#dde3ec;
+  --text:#1a2332;--text-2:#556070;--text-3:#8a96a3;--white:#ffffff;--radius:8px;
+}
+body{font-family:'Sarabun',sans-serif;background:#eef1f6;color:var(--text);font-size:14px;line-height:1.6;min-height:100vh}
+
+.header{background:linear-gradient(135deg,var(--navy) 0%,var(--navy-mid) 100%);color:white;padding:18px 28px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px}
+.header h1{font-size:18px;font-weight:600}
+.header p{font-size:12px;opacity:.65;margin-top:2px}
+.hdr-right{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.chip{background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.2);border-radius:20px;padding:4px 14px;font-size:12px;color:rgba(255,255,255,.9)}
+.btn{font-family:inherit;font-size:12px;border-radius:var(--radius);cursor:pointer;display:inline-flex;align-items:center;gap:6px;padding:6px 14px;transition:all .2s}
+.btn-ghost{background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.25);color:white}
+.btn-ghost:hover{background:rgba(255,255,255,.25)}
+.btn-primary{background:var(--blue);border:1px solid var(--blue);color:white}
+.btn-primary:hover{background:#245d99}
+
+.main{padding:20px 24px;max-width:1400px;margin:0 auto}
+
+.state-box{text-align:center;padding:60px 20px;color:var(--text-2);font-size:14px}
+.spinner{width:32px;height:32px;border:3px solid var(--border);border-top-color:var(--blue);border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 14px}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+.metrics{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-bottom:20px}
+.metric{background:var(--white);border-radius:var(--radius);border:1px solid var(--border);padding:14px 16px;position:relative;overflow:hidden}
+.metric::before{content:'';position:absolute;left:0;top:0;bottom:0;width:4px;border-radius:var(--radius) 0 0 var(--radius)}
+.m-total::before{background:var(--navy)}.m-expired::before{background:var(--red)}.m-soon::before{background:var(--amber)}.m-eval::before{background:var(--blue)}.m-ok::before{background:var(--teal)}
+.m-label{font-size:11px;color:var(--text-3);font-weight:500;text-transform:uppercase;letter-spacing:.5px}
+.m-value{font-size:28px;font-weight:600;margin-top:4px;line-height:1}
+.m-total .m-value{color:var(--navy)}.m-expired .m-value{color:var(--red)}.m-soon .m-value{color:var(--amber)}.m-eval .m-value{color:var(--blue)}.m-ok .m-value{color:var(--teal)}
+.m-sub{font-size:11px;color:var(--text-3);margin-top:4px}
+
+.sec-title{font-size:12px;font-weight:600;color:var(--text-2);text-transform:uppercase;letter-spacing:.6px;margin-bottom:10px}
+.alerts-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:8px;margin-bottom:24px}
+.alert-card{border-radius:var(--radius);padding:10px 14px;display:flex;align-items:flex-start;gap:10px;border:1px solid transparent}
+.ac-red{background:var(--red-lt);border-color:#f5b3b3}.ac-amber{background:var(--amber-lt);border-color:#f5d28a}.ac-blue{background:var(--blue-lt);border-color:#a8ccf0}
+.ac-icon{font-size:15px;line-height:1;margin-top:1px;flex-shrink:0}
+.ac-title{font-size:12px;font-weight:600}
+.ac-red .ac-title{color:var(--red)}.ac-amber .ac-title{color:var(--amber)}.ac-blue .ac-title{color:#1a5a9a}
+.ac-sub{font-size:11px;color:var(--text-2);margin-top:2px;line-height:1.5}
+.no-alerts{font-size:13px;color:var(--text-3);padding:8px 0}
+
+.filters{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:14px}
+.filters select,.filters input{font-family:inherit;font-size:13px;border:1px solid var(--border);border-radius:var(--radius);background:var(--white);color:var(--text);padding:6px 10px;height:34px;outline:none;transition:border-color .15s}
+.filters select:focus,.filters input:focus{border-color:var(--blue)}
+.filters input{width:220px}
+.result-count{font-size:12px;color:var(--text-3);margin-left:auto}
+
+.table-wrap{background:var(--white);border-radius:var(--radius);border:1px solid var(--border);overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:13px}
+thead th{background:#f0f3f8;color:var(--text-2);font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:.5px;padding:10px 12px;text-align:left;white-space:nowrap;border-bottom:1px solid var(--border);user-select:none}
+thead th.sortable{cursor:pointer}
+thead th.sortable:hover{background:#e4e9f2;color:var(--navy)}
+thead th .sort-icon{display:inline-block;margin-left:4px;opacity:.35;font-size:10px}
+thead th.sort-asc .sort-icon,thead th.sort-desc .sort-icon{opacity:1;color:var(--blue)}
+.filter-tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px}
+.ftab{font-family:inherit;font-size:12px;padding:5px 14px;border-radius:20px;border:1.5px solid var(--border);background:var(--white);color:var(--text-2);cursor:pointer;transition:all .15s;font-weight:500}
+.ftab:hover{border-color:var(--blue);color:var(--blue)}
+.ftab.active{border-color:var(--blue);background:var(--blue);color:white}
+.ftab.active-recruit{border-color:var(--amber);background:var(--amber);color:white}
+.ftab.active-eval{border-color:var(--purple);background:var(--purple);color:white}
+tbody tr{border-bottom:1px solid #f0f3f8;transition:background .1s;cursor:pointer}
+tbody tr:last-child{border-bottom:none}
+tbody tr:hover{background:#f0f6ff}
+td{padding:9px 12px;vertical-align:middle}
+td.pos{font-size:12px;font-weight:500;color:var(--text);max-width:200px}
+td.name{font-size:12px;color:var(--text-2);max-width:180px}
+td.date{font-size:12px;color:var(--text-2);white-space:nowrap}
+
+.prog-wrap{min-width:100px}
+.prog-pct{font-size:11px;color:var(--text-3);margin-bottom:3px}
+.prog-bar{height:5px;background:#e4e9f0;border-radius:3px;overflow:hidden}
+.prog-inner{height:100%;border-radius:3px}
+
+.badge{display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:500;padding:2px 8px;border-radius:20px;white-space:nowrap}
+.b-red{background:var(--red-lt);color:var(--red)}.b-amber{background:var(--amber-lt);color:var(--amber)}
+.b-blue{background:var(--blue-lt);color:#1a5a9a}.b-teal{background:var(--teal-lt);color:var(--teal)}
+.b-purple{background:var(--purple-lt);color:var(--purple)}.b-gray{background:#eff1f5;color:var(--text-3)}
+
+.eval-cell{font-size:11px;white-space:nowrap;display:flex;flex-direction:column;gap:3px}
+.eval-date-line{display:flex;align-items:center;gap:4px}
+.eval-done{color:var(--text-3)}.eval-soon{color:var(--red);font-weight:600}.eval-pending{color:var(--text-2)}.eval-na{color:var(--border)}
+
+/* ── Side Panel ── */
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.35);z-index:100;display:none;animation:fadeIn .2s}
+.overlay.open{display:block}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+.panel{position:fixed;right:0;top:0;bottom:0;width:420px;max-width:100vw;background:var(--white);z-index:101;box-shadow:-4px 0 24px rgba(0,0,0,.12);display:flex;flex-direction:column;transform:translateX(100%);transition:transform .25s ease}
+.panel.open{transform:translateX(0)}
+.panel-header{background:var(--navy);color:white;padding:16px 20px;flex-shrink:0}
+.panel-header h3{font-size:15px;font-weight:600}
+.panel-header p{font-size:12px;opacity:.7;margin-top:3px}
+.panel-close{position:absolute;top:14px;right:16px;background:none;border:none;color:white;font-size:22px;cursor:pointer;opacity:.7;line-height:1}
+.panel-close:hover{opacity:1}
+.panel-body{flex:1;overflow-y:auto;padding:20px}
+.panel-section{margin-bottom:24px}
+.panel-section h4{font-size:12px;font-weight:600;color:var(--text-3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px;padding-bottom:6px;border-bottom:1px solid var(--border)}
+.info-grid{display:grid;grid-template-columns:auto 1fr;gap:6px 16px;font-size:13px}
+.info-grid .lbl{color:var(--text-3);white-space:nowrap}
+.info-grid .val{color:var(--text);font-weight:500}
+.timeline{display:flex;flex-direction:column;gap:0}
+.tl-item{display:flex;gap:12px;position:relative}
+.tl-item:not(:last-child)::after{content:'';position:absolute;left:10px;top:22px;bottom:-4px;width:2px;background:var(--border)}
+.tl-dot{width:22px;height:22px;border-radius:50%;border:2px solid var(--border);background:var(--white);display:flex;align-items:center;justify-content:center;font-size:10px;flex-shrink:0;margin-top:0;z-index:1}
+.tl-dot.done{background:var(--teal);border-color:var(--teal);color:white}
+.tl-dot.active{background:var(--blue);border-color:var(--blue);color:white}
+.tl-dot.warn{background:var(--amber);border-color:var(--amber);color:white}
+.tl-dot.danger{background:var(--red);border-color:var(--red);color:white}
+.tl-dot.pending{background:#f0f3f8;border-color:var(--border);color:var(--text-3)}
+.tl-content{padding-bottom:16px;flex:1}
+.tl-title{font-size:13px;font-weight:500;color:var(--text)}
+.tl-date{font-size:11px;color:var(--text-3);margin-top:1px}
+.tl-days{font-size:11px;margin-top:4px}
+
+.status-group{margin-bottom:16px}
+.status-label{font-size:12px;font-weight:500;color:var(--text-2);margin-bottom:8px}
+.status-options{display:flex;flex-wrap:wrap;gap:6px}
+.status-btn{font-family:inherit;font-size:12px;padding:5px 12px;border-radius:20px;border:1.5px solid var(--border);background:var(--white);color:var(--text-2);cursor:pointer;transition:all .15s}
+.status-btn:hover{border-color:var(--blue);color:var(--blue)}
+.status-btn.selected{border-color:var(--blue);background:var(--blue);color:white}
+.status-btn.sel-inprogress{border-color:var(--amber);background:var(--amber-lt);color:var(--amber)}
+.status-btn.sel-done{border-color:var(--teal);background:var(--teal-lt);color:var(--teal)}
+.status-btn.sel-none{border-color:var(--border);background:#f7f9fc;color:var(--text-3)}
+.save-row{display:flex;align-items:center;gap:10px;margin-top:4px}
+.save-msg{font-size:12px;color:var(--teal)}
+
+.footer{text-align:center;font-size:11px;color:var(--text-3);padding:18px 0 28px;margin-top:8px}
+
+/* ── Login screen ── */
+.login-wrap{position:fixed;inset:0;background:linear-gradient(135deg,#1a2e4a 0%,#24426b 100%);display:flex;align-items:center;justify-content:center;z-index:999}
+.login-box{background:#fff;border-radius:16px;padding:36px 40px;width:340px;box-shadow:0 20px 60px rgba(0,0,0,.3);text-align:center}
+.login-box .lock{font-size:40px;margin-bottom:12px}
+.login-box h2{font-size:18px;font-weight:600;color:#1a2e4a;margin-bottom:4px}
+.login-box p{font-size:13px;color:#8a96a3;margin-bottom:24px}
+.login-box input{width:100%;font-family:inherit;font-size:14px;padding:10px 14px;border:1.5px solid #dde3ec;border-radius:8px;outline:none;margin-bottom:12px;letter-spacing:2px;transition:border-color .15s}
+.login-box input:focus{border-color:#2e6fad}
+.login-box button{width:100%;font-family:inherit;font-size:14px;font-weight:500;padding:10px;border-radius:8px;border:none;background:#2e6fad;color:white;cursor:pointer;transition:background .2s}
+.login-box button:hover{background:#245d99}
+.login-err{font-size:12px;color:#b83232;margin-top:8px;min-height:18px}
+.admin-bar{background:#2e6fad;color:white;font-size:12px;padding:6px 20px;display:flex;align-items:center;justify-content:space-between}
+.admin-bar span{opacity:.9}
+.admin-bar button{font-family:inherit;font-size:11px;background:rgba(255,255,255,.2);border:1px solid rgba(255,255,255,.3);color:white;border-radius:6px;padding:3px 10px;cursor:pointer}
+.admin-bar button:hover{background:rgba(255,255,255,.35)}
+#app{display:none}
+</style>
+</head>
+<body>
+
+<!-- Login Screen -->
+<div class="login-wrap" id="login-wrap">
+  <div class="login-box">
+    <div class="lock">🔐</div>
+    <h2>Admin Dashboard</h2>
+    <p>กรุณาใส่รหัสผ่านเพื่อเข้าใช้งาน</p>
+    <input type="password" id="pw-input" placeholder="Password" onkeydown="if(event.key==='Enter')doLogin()">
+    <button onclick="doLogin()">เข้าสู่ระบบ</button>
+    <div class="login-err" id="login-err"></div>
+  </div>
+</div>
+
+<!-- Admin App (hidden until login) -->
+<div id="app">
+  <div class="admin-bar">
+    <span>🔓 Admin Mode — สามารถแก้ไขสถานะได้</span>
+    <button onclick="doLogout()">ออกจากระบบ</button>
+  </div>
+
+  <div class="header">
+    <div>
+      <h1>วาระการดำรงตำแหน่งผู้บริหาร <span style="font-size:12px;background:rgba(255,255,255,.2);padding:2px 10px;border-radius:10px;margin-left:8px">ADMIN</span></h1>
+      <p>ดึงข้อมูลจาก Google Sheets · คำนวณอัตโนมัติ · แก้ไขสถานะได้</p>
+    </div>
+    <div class="hdr-right">
+      <div class="chip" id="today-chip"></div>
+      <button class="btn btn-ghost" onclick="loadData()">↺ รีเฟรช</button>
+    </div>
+  </div>
+
+  <div class="main" id="main">
+    <div class="state-box"><div class="spinner"></div><div>กำลังโหลดข้อมูล…</div></div>
+  </div>
+  <div class="footer" id="footer"></div>
+</div>
+
+<!-- Side Panel (same as main dashboard) -->
+<div class="overlay" id="overlay" onclick="closePanel()"></div>
+<div class="panel" id="panel">
+  <div class="panel-header">
+    <button class="panel-close" onclick="closePanel()">✕</button>
+    <h3 id="panel-pos">—</h3>
+    <p id="panel-name">—</p>
+  </div>
+  <div class="panel-body" id="panel-body"></div>
+</div>
+
+<script>
+/* ── Auth ── */
+const HASH_STORED = 'c57f631aacde78068445c475abf4dad758b3f935bfc95e1a7a0659762bf42ec3'; // placeholder replaced below
+
+async function sha256(str) {
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
+  return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');
+}
+
+async function doLogin() {
+  const pw = document.getElementById('pw-input').value;
+  const hash = await sha256(pw);
+  if (hash === HASH_STORED) {
+    sessionStorage.setItem('admin_auth','1');
+    document.getElementById('login-wrap').style.display='none';
+    document.getElementById('app').style.display='block';
+    init();
+  } else {
+    const err = document.getElementById('login-err');
+    err.textContent = 'รหัสผ่านไม่ถูกต้อง กรุณาลองใหม่';
+    document.getElementById('pw-input').value='';
+    document.getElementById('pw-input').focus();
+    setTimeout(()=>{ err.textContent=''; }, 3000);
+  }
+}
+
+function doLogout() {
+  sessionStorage.removeItem('admin_auth');
+  location.reload();
+}
+
+function init() {
+  document.getElementById('today-chip').textContent='วันนี้: '+TODAY.toLocaleDateString('th-TH',{weekday:'short',day:'numeric',month:'long',year:'numeric'});
+  loadData();
+}
+
+// Auto-login if already authenticated in this session
+window.addEventListener('DOMContentLoaded', async ()=>{
+  if (sessionStorage.getItem('admin_auth')==='1') {
+    document.getElementById('login-wrap').style.display='none';
+    document.getElementById('app').style.display='block';
+    init();
+  } else {
+    document.getElementById('pw-input').focus();
+  }
+});
+
+
+const API = 'https://script.google.com/macros/s/AKfycby5aLUyIIYwFtbUiciOE5QAKO92y-3_cs5bgQYP76wWg97FtTj-DD1405DBMF-WgJM/exec';
+const TERM_YEARS = 4;
+const TODAY = new Date(); TODAY.setHours(0,0,0,0);
+
+const fmtDate = d => (!d||isNaN(d)) ? '—' : d.toLocaleDateString('th-TH',{day:'numeric',month:'short',year:'2-digit'});
+const daysDiff = (a,b) => Math.round((b-a)/86400000);
+const addYears = (d,y) => { const r=new Date(d); r.setFullYear(r.getFullYear()+y); r.setDate(r.getDate()-1); return r; };
+const parseDate = s => { if(!s||String(s).trim()==='') return null; const d=new Date(String(s).trim()); return isNaN(d)?null:d; };
+
+const STATUS_RECRUIT = ['—','อยู่ระหว่างสรรหา','สรรหาเสร็จสิ้น'];
+const STATUS_EVAL    = ['—','อยู่ระหว่างประเมิน','ประเมินเสร็จสิ้น'];
+
+function calcRow(r, idx) {
+  const start = parseDate(r['วันเริ่มต้น']);
+  const end   = start ? addYears(start, TERM_YEARS) : null;
+  const eval1 = start ? addYears(start, 1) : null;
+  const eval3 = start ? addYears(start, 3) : null;
+  const daysToEnd = end ? daysDiff(TODAY, end) : null;
+  const total     = (start&&end) ? daysDiff(start,end) : null;
+  const elapsed   = start ? daysDiff(start,TODAY) : null;
+  const pct = (total&&elapsed!==null) ? Math.min(100,Math.max(0,Math.round(elapsed/total*100))) : null;
+
+  let statusKey = 'active';
+  if (daysToEnd!==null && daysToEnd<0) statusKey='expired';
+  else {
+    const e1s = eval1 && daysDiff(TODAY,eval1)>=0 && daysDiff(TODAY,eval1)<=30;
+    const e3s = eval3 && daysDiff(TODAY,eval3)>=0 && daysDiff(TODAY,eval3)<=30;
+    if (e1s||e3s) statusKey='eval30';
+    else if (daysToEnd!==null && daysToEnd<=180) statusKey='recruit180';
+  }
+
+  const stRecruit = r['สถานะสรรหา']   || '—';
+  const stEval1   = r['สถานะประเมิน_1ปี'] || '—';
+  const stEval3   = r['สถานะประเมิน_3ปี'] || '—';
+
+  return { ...r, _idx:idx, start, end, eval1, eval3, daysToEnd, pct, statusKey, stRecruit, stEval1, stEval3 };
+}
+
+function statusBadge(row) {
+  const {daysToEnd,statusKey,stRecruit,stEval1,stEval3} = row;
+  if (stRecruit==='อยู่ระหว่างสรรหา')   return `<span class="badge b-amber">⬤ อยู่ระหว่างสรรหา</span>`;
+  if (stRecruit==='สรรหาเสร็จสิ้น')     return `<span class="badge b-teal">✓ สรรหาเสร็จสิ้น</span>`;
+  if (stEval1==='อยู่ระหว่างประเมิน'||stEval3==='อยู่ระหว่างประเมิน') return `<span class="badge b-purple">⬤ อยู่ระหว่างประเมิน</span>`;
+  if (stEval1==='ประเมินเสร็จสิ้น'&&stEval3==='ประเมินเสร็จสิ้น') return `<span class="badge b-teal">✓ ประเมินเสร็จสิ้น</span>`;
+  if (statusKey==='expired')    return `<span class="badge b-red">⬤ หมดวาระ</span>`;
+  if (statusKey==='eval30')     return `<span class="badge b-blue">⬤ ใกล้รอบประเมิน</span>`;
+  if (statusKey==='recruit180') return `<span class="badge b-amber">⬤ ใกล้สรรหา ${daysToEnd}ว.</span>`;
+  return `<span class="badge b-teal">⬤ ปกติ</span>`;
+}
+
+function evalBadge(evalDate, st) {
+  if (!evalDate) return '<span class="eval-na">—</span>';
+  const d = daysDiff(TODAY, evalDate);
+  let dateCls = d<0?'eval-done': d<=30?'eval-soon':'eval-pending';
+  let stBadge = '';
+  if (st==='อยู่ระหว่างประเมิน') stBadge=`<span class="badge b-purple" style="font-size:10px">กำลังดำเนินการ</span>`;
+  else if (st==='ประเมินเสร็จสิ้น') stBadge=`<span class="badge b-teal" style="font-size:10px">✓ เสร็จสิ้น</span>`;
+  return `<div class="eval-cell"><span class="${dateCls}">${d<0?'✓ ':d<=30?'⚠ ':''} ${fmtDate(evalDate)}</span>${stBadge}</div>`;
+}
+
+function progBar(row) {
+  if (row.pct===null) return '—';
+  let color='#1d8a74';
+  if (row.daysToEnd!==null && row.daysToEnd<0) color='#b83232';
+  else if (row.daysToEnd!==null && row.daysToEnd<=180) color='#b86a00';
+  const label = row.daysToEnd===null?'': row.daysToEnd<0
+    ? `${row.pct}% · หมดแล้ว ${Math.abs(row.daysToEnd)} วัน`
+    : `${row.pct}% · เหลือ ${row.daysToEnd} วัน`;
+  return `<div class="prog-wrap"><div class="prog-pct">${label}</div><div class="prog-bar"><div class="prog-inner" style="width:${row.pct}%;background:${color}"></div></div></div>`;
+}
+
+function renderDashboard(rows) {
+  const expired=rows.filter(r=>r.statusKey==='expired').length;
+  const recruit180=rows.filter(r=>r.statusKey==='recruit180').length;
+  const eval30=rows.filter(r=>r.statusKey==='eval30').length;
+  const active=rows.filter(r=>r.statusKey==='active').length;
+
+  const alerts=[];
+  rows.forEach(r=>{
+    if (r.stRecruit==='อยู่ระหว่างสรรหา') alerts.push({cls:'ac-amber',icon:'🔍',title:`อยู่ระหว่างสรรหา`,sub:`${r['ตำแหน่ง']} — ${r['ชื่อ-สกุล']}`});
+    else if (r.statusKey==='expired') alerts.push({cls:'ac-red',icon:'🔴',title:`หมดวาระแล้ว ${Math.abs(r.daysToEnd)} วัน`,sub:`${r['ตำแหน่ง']} — ${r['ชื่อ-สกุล']}`});
+    else if (r.statusKey==='recruit180') alerts.push({cls:'ac-amber',icon:'🟡',title:`ใกล้หมดวาระ เหลือ ${r.daysToEnd} วัน (${fmtDate(r.end)})`,sub:`${r['ตำแหน่ง']} — ${r['ชื่อ-สกุล']}`});
+    if (r.stEval1==='อยู่ระหว่างประเมิน') alerts.push({cls:'ac-blue',icon:'📋',title:`อยู่ระหว่างประเมิน 1 ปี`,sub:`${r['ตำแหน่ง']} — ${r['ชื่อ-สกุล']}`});
+    else if (r.eval1){const d=daysDiff(TODAY,r.eval1);if(d>=0&&d<=30) alerts.push({cls:'ac-blue',icon:'🔵',title:`ประเมิน 1 ปี ใน ${d} วัน (${fmtDate(r.eval1)})`,sub:`${r['ตำแหน่ง']} — ${r['ชื่อ-สกุล']}`});}
+    if (r.stEval3==='อยู่ระหว่างประเมิน') alerts.push({cls:'ac-blue',icon:'📋',title:`อยู่ระหว่างประเมิน 3 ปี`,sub:`${r['ตำแหน่ง']} — ${r['ชื่อ-สกุล']}`});
+    else if (r.eval3){const d=daysDiff(TODAY,r.eval3);if(d>=0&&d<=30) alerts.push({cls:'ac-blue',icon:'🔵',title:`ประเมิน 3 ปี ใน ${d} วัน (${fmtDate(r.eval3)})`,sub:`${r['ตำแหน่ง']} — ${r['ชื่อ-สกุล']}`});}
+  });
+
+  document.getElementById('main').innerHTML = `
+  <div class="metrics">
+    <div class="metric m-total"><div class="m-label">ทั้งหมด</div><div class="m-value">${rows.length}</div><div class="m-sub">ตำแหน่ง</div></div>
+    <div class="metric m-expired"><div class="m-label">หมดวาระ</div><div class="m-value">${expired}</div><div class="m-sub">รอการสรรหา</div></div>
+    <div class="metric m-soon"><div class="m-label">ใกล้หมดวาระ</div><div class="m-value">${recruit180}</div><div class="m-sub">≤ 180 วัน</div></div>
+    <div class="metric m-eval"><div class="m-label">ใกล้รอบประเมิน</div><div class="m-value">${eval30}</div><div class="m-sub">≤ 30 วัน</div></div>
+    <div class="metric m-ok"><div class="m-label">ปกติ</div><div class="m-value">${active}</div><div class="m-sub">ตำแหน่ง</div></div>
+  </div>
+  <div class="sec-title">🔔 แจ้งเตือนเร่งด่วน</div>
+  <div class="alerts-grid">${alerts.length===0?'<p class="no-alerts">✓ ไม่มีการแจ้งเตือนเร่งด่วน</p>':alerts.map(a=>`<div class="alert-card ${a.cls}"><div class="ac-icon">${a.icon}</div><div><div class="ac-title">${a.title}</div><div class="ac-sub">${a.sub}</div></div></div>`).join('')}</div>
+  <div class="filter-tabs">
+    <button class="ftab active" id="tab-all" onclick="setTab('all')">ทั้งหมด</button>
+    <button class="ftab" id="tab-recruit" onclick="setTab('recruit')">🔍 การสรรหา</button>
+    <button class="ftab" id="tab-eval" onclick="setTab('eval')">📋 การประเมิน</button>
+  </div>
+  <div class="filters">
+    <select id="f-status" onchange="applyFilter()">
+      <option value="all">ทุกสถานะ</option>
+      <option value="expired">หมดวาระแล้ว</option>
+      <option value="inprogress-recruit">อยู่ระหว่างสรรหา</option>
+      <option value="recruit180">ใกล้หมดวาระ ≤ 180 วัน</option>
+      <option value="inprogress-eval">อยู่ระหว่างประเมิน</option>
+      <option value="eval30">ใกล้รอบประเมิน ≤ 30 วัน</option>
+      <option value="active">ปกติ</option>
+    </select>
+    <input type="text" id="f-search" placeholder="ค้นหาตำแหน่ง / ชื่อ…" oninput="applyFilter()">
+    <span class="result-count" id="result-count"></span>
+  </div>
+  <div class="table-wrap">
+    <table>
+      <thead><tr>
+        <th style="min-width:180px">ตำแหน่ง</th>
+        <th style="min-width:160px">ชื่อ-สกุล</th>
+        <th class="sortable" onclick="sortBy('start')" id="th-start">วันเริ่มต้น<span class="sort-icon">⇅</span></th>
+        <th class="sortable" onclick="sortBy('end')" id="th-end">วันสิ้นสุด<span class="sort-icon">⇅</span></th>
+        <th style="min-width:130px" class="sortable" onclick="sortBy('pct')" id="th-pct">ความคืบหน้า<span class="sort-icon">⇅</span></th>
+        <th>สถานะ</th>
+        <th class="sortable" onclick="sortBy('eval1')" id="th-eval1">ประเมิน 1 ปี<span class="sort-icon">⇅</span></th>
+        <th class="sortable" onclick="sortBy('eval3')" id="th-eval3">ประเมิน 3 ปี<span class="sort-icon">⇅</span></th>
+      </tr></thead>
+      <tbody id="tbody"></tbody>
+    </table>
+  </div>`;
+
+  window._rows = rows;
+  applyFilter();
+}
+
+let _sortCol = null, _sortDir = 1, _activeTab = 'all';
+
+function setTab(tab) {
+  _activeTab = tab;
+  ['all','recruit','eval'].forEach(t => {
+    const el = document.getElementById('tab-'+t);
+    if (!el) return;
+    el.className = 'ftab' + (t===tab ? (tab==='recruit'?' active-recruit':tab==='eval'?' active-eval':' active') : '');
+  });
+  // auto-set status filter based on tab
+  const sel = document.getElementById('f-status');
+  if (tab==='recruit') sel.value = 'all';
+  if (tab==='eval')    sel.value = 'all';
+  applyFilter();
+}
+
+function sortBy(col) {
+  if (_sortCol===col) _sortDir *= -1; else { _sortCol=col; _sortDir=1; }
+  ['start','end','pct','eval1','eval3'].forEach(c=>{
+    const th=document.getElementById('th-'+c);
+    if(!th) return;
+    th.classList.remove('sort-asc','sort-desc');
+    th.querySelector('.sort-icon').textContent='⇅';
+  });
+  const th=document.getElementById('th-'+col);
+  if(th){ th.classList.add(_sortDir===1?'sort-asc':'sort-desc'); th.querySelector('.sort-icon').textContent=_sortDir===1?'↑':'↓'; }
+  applyFilter();
+}
+
+function applyFilter() {
+  const status = document.getElementById('f-status') ? document.getElementById('f-status').value : 'all';
+  const q = document.getElementById('f-search') ? document.getElementById('f-search').value.toLowerCase() : '';
+  let rows = (window._rows||[]).filter(r=>{
+    // Tab filter
+    if (_activeTab==='recruit') {
+      const relevant = r.statusKey==='expired' || r.statusKey==='recruit180' || r.stRecruit==='อยู่ระหว่างสรรหา' || r.stRecruit==='สรรหาเสร็จสิ้น';
+      if (!relevant) return false;
+    }
+    if (_activeTab==='eval') {
+      const relevant = r.statusKey==='eval30' || r.stEval1!=='—' || r.stEval3!=='—';
+      if (!relevant) return false;
+    }
+    // Status filter
+    if (status==='expired' && r.statusKey!=='expired') return false;
+    if (status==='recruit180' && r.statusKey!=='recruit180') return false;
+    if (status==='eval30' && r.statusKey!=='eval30') return false;
+    if (status==='active' && r.statusKey!=='active') return false;
+    if (status==='inprogress-recruit' && r.stRecruit!=='อยู่ระหว่างสรรหา') return false;
+    if (status==='inprogress-eval' && r.stEval1!=='อยู่ระหว่างประเมิน' && r.stEval3!=='อยู่ระหว่างประเมิน') return false;
+    // Search
+    if (q&&!r['ตำแหน่ง'].toLowerCase().includes(q)&&!r['ชื่อ-สกุล'].toLowerCase().includes(q)) return false;
+    return true;
+  });
+
+  // Sort
+  if (_sortCol) {
+    rows = [...rows].sort((a,b)=>{
+      let va = a[_sortCol], vb = b[_sortCol];
+      if (va instanceof Date && vb instanceof Date) { va=va.getTime(); vb=vb.getTime(); }
+      else if (typeof va==='number' && typeof vb==='number') {}
+      else { va = va||0; vb = vb||0; }
+      if (va===null||va===undefined) va=Infinity;
+      if (vb===null||vb===undefined) vb=Infinity;
+      return (va-vb)*_sortDir;
+    });
+  }
+
+  document.getElementById('result-count').textContent=`แสดง ${rows.length} รายการ`;
+  document.getElementById('tbody').innerHTML=rows.map(r=>`
+    <tr onclick="openPanel(${r._idx})">
+      <td class="pos">${r['ตำแหน่ง']}</td>
+      <td class="name">${r['ชื่อ-สกุล']}</td>
+      <td class="date">${fmtDate(r.start)}</td>
+      <td class="date">${fmtDate(r.end)}</td>
+      <td>${progBar(r)}</td>
+      <td>${statusBadge(r)}</td>
+      <td>${evalBadge(r.eval1,r.stEval1)}</td>
+      <td>${evalBadge(r.eval3,r.stEval3)}</td>
+    </tr>`).join('');
+}
+
+/* ── Panel ── */
+function openPanel(idx) {
+  const r = window._rows[idx];
+  document.getElementById('panel-pos').textContent  = r['ตำแหน่ง'];
+  document.getElementById('panel-name').textContent = r['ชื่อ-สกุล'];
+
+  const dE1 = r.eval1 ? daysDiff(TODAY,r.eval1) : null;
+  const dE3 = r.eval3 ? daysDiff(TODAY,r.eval3) : null;
+  const dEnd= r.end   ? daysDiff(TODAY,r.end)   : null;
+
+  function tlDot(evalDate, st, daysLeft) {
+    if (st==='ประเมินเสร็จสิ้น') return 'done';
+    if (st==='อยู่ระหว่างประเมิน') return 'active';
+    if (daysLeft!==null && daysLeft<0) return 'warn';
+    if (daysLeft!==null && daysLeft<=30) return 'warn';
+    return 'pending';
+  }
+  function recruitDot(st, dEnd) {
+    if (st==='สรรหาเสร็จสิ้น') return 'done';
+    if (st==='อยู่ระหว่างสรรหา') return 'active';
+    if (dEnd!==null && dEnd<0) return 'danger';
+    if (dEnd!==null && dEnd<=180) return 'warn';
+    return 'pending';
+  }
+
+  document.getElementById('panel-body').innerHTML = `
+  <div class="panel-section">
+    <h4>ข้อมูลวาระ</h4>
+    <div class="info-grid">
+      <span class="lbl">วันเริ่มต้น</span><span class="val">${fmtDate(r.start)}</span>
+      <span class="lbl">วันสิ้นสุด</span><span class="val">${fmtDate(r.end)} ${dEnd!==null&&dEnd<0?'<span class="badge b-red" style="font-size:10px">หมดแล้ว '+Math.abs(dEnd)+' วัน</span>':dEnd!==null?'(เหลือ '+dEnd+' วัน)':''}</span>
+      <span class="lbl">ความคืบหน้า</span><span class="val">${r.pct!==null?r.pct+'%':'—'}</span>
+    </div>
+  </div>
+
+  <div class="panel-section">
+    <h4>ไทม์ไลน์</h4>
+    <div class="timeline">
+      <div class="tl-item">
+        <div class="tl-dot done">✓</div>
+        <div class="tl-content">
+          <div class="tl-title">เริ่มดำรงตำแหน่ง</div>
+          <div class="tl-date">${fmtDate(r.start)}</div>
+        </div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-dot ${tlDot(r.eval1,r.stEval1,dE1)}">${r.stEval1==='ประเมินเสร็จสิ้น'?'✓':dE1!==null&&dE1<0?'✓':'1'}</div>
+        <div class="tl-content">
+          <div class="tl-title">ประเมินผล ครั้งที่ 1 (1 ปี)</div>
+          <div class="tl-date">${fmtDate(r.eval1)}</div>
+          <div class="tl-days">${dE1===null?'':dE1<0?`<span style="color:var(--text-3)">ผ่านมาแล้ว ${Math.abs(dE1)} วัน</span>`:dE1===0?`<span style="color:var(--red)">วันนี้</span>`:`<span style="color:${dE1<=30?'var(--red)':'var(--text-2)'}">อีก ${dE1} วัน</span>`}</div>
+          ${r.stEval1!=='—'?`<div style="margin-top:4px">${evalBadge(r.eval1,r.stEval1)}</div>`:''}
+        </div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-dot ${tlDot(r.eval3,r.stEval3,dE3)}">${r.stEval3==='ประเมินเสร็จสิ้น'?'✓':dE3!==null&&dE3<0?'✓':'3'}</div>
+        <div class="tl-content">
+          <div class="tl-title">ประเมินผล ครั้งที่ 2 (3 ปี)</div>
+          <div class="tl-date">${fmtDate(r.eval3)}</div>
+          <div class="tl-days">${dE3===null?'':dE3<0?`<span style="color:var(--text-3)">ผ่านมาแล้ว ${Math.abs(dE3)} วัน</span>`:dE3===0?`<span style="color:var(--red)">วันนี้</span>`:`<span style="color:${dE3<=30?'var(--red)':'var(--text-2)'}">อีก ${dE3} วัน</span>`}</div>
+          ${r.stEval3!=='—'?`<div style="margin-top:4px">${evalBadge(r.eval3,r.stEval3)}</div>`:''}
+        </div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-dot ${recruitDot(r.stRecruit,dEnd)}">${r.stRecruit==='สรรหาเสร็จสิ้น'?'✓':dEnd!==null&&dEnd<0?'!':'↻'}</div>
+        <div class="tl-content">
+          <div class="tl-title">สิ้นสุดวาระ / สรรหาผู้บริหาร</div>
+          <div class="tl-date">${fmtDate(r.end)}</div>
+          <div class="tl-days">${dEnd===null?'':dEnd<0?`<span style="color:var(--red)">เกินวาระ ${Math.abs(dEnd)} วัน</span>`:dEnd<=180?`<span style="color:var(--amber)">เหลืออีก ${dEnd} วัน — ควรเริ่มสรรหา</span>`:`<span style="color:var(--text-2)">เหลืออีก ${dEnd} วัน</span>`}</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="panel-section">
+    <h4>อัปเดตสถานะ</h4>
+    <div class="status-group">
+      <div class="status-label">🔍 การสรรหา</div>
+      <div class="status-options" id="opt-recruit">${STATUS_RECRUIT.map(s=>`<button class="status-btn${r.stRecruit===s?' sel-'+selClass(s):''}" onclick="selectStatus(${idx},'สถานะสรรหา','${s}',this,'opt-recruit')">${s}</button>`).join('')}</div>
+    </div>
+    <div class="status-group">
+      <div class="status-label">📋 การประเมิน 1 ปี</div>
+      <div class="status-options" id="opt-eval1">${STATUS_EVAL.map(s=>`<button class="status-btn${r.stEval1===s?' sel-'+selClass(s):''}" onclick="selectStatus(${idx},'สถานะประเมิน_1ปี','${s}',this,'opt-eval1')">${s}</button>`).join('')}</div>
+    </div>
+    <div class="status-group">
+      <div class="status-label">📋 การประเมิน 3 ปี</div>
+      <div class="status-options" id="opt-eval3">${STATUS_EVAL.map(s=>`<button class="status-btn${r.stEval3===s?' sel-'+selClass(s):''}" onclick="selectStatus(${idx},'สถานะประเมิน_3ปี','${s}',this,'opt-eval3')">${s}</button>`).join('')}</div>
+    </div>
+    <div class="save-row">
+      <button class="btn btn-primary" onclick="saveStatus(${idx})">บันทึก</button>
+      <span class="save-msg" id="save-msg"></span>
+    </div>
+  </div>`;
+
+  document.getElementById('overlay').classList.add('open');
+  document.getElementById('panel').classList.add('open');
+}
+
+function selClass(s){ return s==='—'?'none':s.includes('ระหว่าง')?'inprogress':'done'; }
+
+const _pending = {}; // temp state before save
+
+function selectStatus(idx, field, val, btn, groupId) {
+  document.querySelectorAll(`#${groupId} .status-btn`).forEach(b=>{b.className='status-btn'});
+  btn.className=`status-btn sel-${selClass(val)}`;
+  if(!_pending[idx]) _pending[idx]={};
+  _pending[idx][field]=val;
+}
+
+async function saveStatus(idx) {
+  const msg = document.getElementById('save-msg');
+  msg.textContent='กำลังบันทึก…'; msg.style.color='var(--text-3)';
+  const changes = _pending[idx]||{};
+  if(Object.keys(changes).length===0){ msg.textContent='ไม่มีการเปลี่ยนแปลง'; return; }
+  try {
+    for (const [field,value] of Object.entries(changes)) {
+      await fetch(API, {method:'POST', body: JSON.stringify({rowIndex:idx, field, value})});
+      window._rows[idx][field==='สถานะสรรหา'?'stRecruit':field==='สถานะประเมิน_1ปี'?'stEval1':'stEval3'] = value;
+      window._rows[idx][field] = value;
+    }
+    delete _pending[idx];
+    msg.textContent='✓ บันทึกแล้ว'; msg.style.color='var(--teal)';
+    applyFilter();
+    renderAlertSection();
+    setTimeout(()=>{ msg.textContent=''; },3000);
+  } catch(e) {
+    msg.textContent='เกิดข้อผิดพลาด กรุณาลองใหม่'; msg.style.color='var(--red)';
+  }
+}
+
+function renderAlertSection() {
+  // re-render just alerts without full re-render
+}
+
+function closePanel() {
+  document.getElementById('overlay').classList.remove('open');
+  document.getElementById('panel').classList.remove('open');
+}
+
+async function loadData() {
+  document.getElementById('main').innerHTML=`<div class="state-box"><div class="spinner"></div><div>กำลังโหลดข้อมูล…</div></div>`;
+  try {
+    const res = await fetch(API);
+    if(!res.ok) throw new Error(`HTTP ${res.status}`);
+    const raw = await res.json();
+    const rows = raw.filter(r=>r['ตำแหน่ง']&&String(r['ตำแหน่ง']).trim()!=='')
+                    .map((r,i)=>{ const m={}; Object.keys(r).forEach(k=>{ m[k]=r[k]===null||r[k]===undefined?'':String(r[k]); }); return m; })
+                    .map(calcRow);
+    renderDashboard(rows);
+    document.getElementById('footer').textContent=`อัปเดตล่าสุด: ${new Date().toLocaleString('th-TH')}`;
+  } catch(e) {
+    document.getElementById('main').innerHTML=`<div class="state-box">
+      <div style="font-size:32px;margin-bottom:12px">⚠️</div>
+      <div style="font-weight:600;margin-bottom:6px">ไม่สามารถโหลดข้อมูลได้</div>
+      <div style="font-size:12px;color:#8a96a3">${e.message}</div>
+      <button class="btn btn-primary" onclick="loadData()" style="margin:16px auto 0">ลองใหม่</button>
+    </div>`;
+  }
+}
+
+document.getElementById('today-chip').textContent='วันนี้: '+TODAY.toLocaleDateString('th-TH',{weekday:'short',day:'numeric',month:'long',year:'numeric'});
+loadData();
+
+</script>
+</body>
+</html>
