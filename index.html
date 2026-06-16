@@ -71,7 +71,7 @@ thead th.sort-asc .sort-icon,thead th.sort-desc .sort-icon{opacity:1;color:var(-
 .ftab.active{border-color:var(--blue);background:var(--blue);color:white}
 .ftab.active-recruit{border-color:var(--amber);background:var(--amber);color:white}
 .ftab.active-eval{border-color:var(--purple);background:var(--purple);color:white}
-tbody tr{border-bottom:1px solid #f0f3f8;transition:background .1s;cursor:pointer}
+tbody tr{border-bottom:1px solid #f0f3f8;transition:background .1s}
 tbody tr:last-child{border-bottom:none}
 tbody tr:hover{background:#f0f6ff}
 td{padding:9px 12px;vertical-align:middle}
@@ -93,49 +93,7 @@ td.date{font-size:12px;color:var(--text-2);white-space:nowrap}
 .eval-date-line{display:flex;align-items:center;gap:4px}
 .eval-done{color:var(--text-3)}.eval-soon{color:var(--red);font-weight:600}.eval-pending{color:var(--text-2)}.eval-na{color:var(--border)}
 
-/* ── Side Panel ── */
-.overlay{position:fixed;inset:0;background:rgba(0,0,0,.35);z-index:100;display:none;animation:fadeIn .2s}
-.overlay.open{display:block}
-@keyframes fadeIn{from{opacity:0}to{opacity:1}}
-.panel{position:fixed;right:0;top:0;bottom:0;width:420px;max-width:100vw;background:var(--white);z-index:101;box-shadow:-4px 0 24px rgba(0,0,0,.12);display:flex;flex-direction:column;transform:translateX(100%);transition:transform .25s ease}
-.panel.open{transform:translateX(0)}
-.panel-header{background:var(--navy);color:white;padding:16px 20px;flex-shrink:0}
-.panel-header h3{font-size:15px;font-weight:600}
-.panel-header p{font-size:12px;opacity:.7;margin-top:3px}
-.panel-close{position:absolute;top:14px;right:16px;background:none;border:none;color:white;font-size:22px;cursor:pointer;opacity:.7;line-height:1}
-.panel-close:hover{opacity:1}
-.panel-body{flex:1;overflow-y:auto;padding:20px}
-.panel-section{margin-bottom:24px}
-.panel-section h4{font-size:12px;font-weight:600;color:var(--text-3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px;padding-bottom:6px;border-bottom:1px solid var(--border)}
-.info-grid{display:grid;grid-template-columns:auto 1fr;gap:6px 16px;font-size:13px}
-.info-grid .lbl{color:var(--text-3);white-space:nowrap}
-.info-grid .val{color:var(--text);font-weight:500}
-.timeline{display:flex;flex-direction:column;gap:0}
-.tl-item{display:flex;gap:12px;position:relative}
-.tl-item:not(:last-child)::after{content:'';position:absolute;left:10px;top:22px;bottom:-4px;width:2px;background:var(--border)}
-.tl-dot{width:22px;height:22px;border-radius:50%;border:2px solid var(--border);background:var(--white);display:flex;align-items:center;justify-content:center;font-size:10px;flex-shrink:0;margin-top:0;z-index:1}
-.tl-dot.done{background:var(--teal);border-color:var(--teal);color:white}
-.tl-dot.active{background:var(--blue);border-color:var(--blue);color:white}
-.tl-dot.warn{background:var(--amber);border-color:var(--amber);color:white}
-.tl-dot.danger{background:var(--red);border-color:var(--red);color:white}
-.tl-dot.pending{background:#f0f3f8;border-color:var(--border);color:var(--text-3)}
-.tl-content{padding-bottom:16px;flex:1}
-.tl-title{font-size:13px;font-weight:500;color:var(--text)}
-.tl-date{font-size:11px;color:var(--text-3);margin-top:1px}
-.tl-days{font-size:11px;margin-top:4px}
-
-.status-group{margin-bottom:16px}
-.status-label{font-size:12px;font-weight:500;color:var(--text-2);margin-bottom:8px}
-.status-options{display:flex;flex-wrap:wrap;gap:6px}
-.status-btn{font-family:inherit;font-size:12px;padding:5px 12px;border-radius:20px;border:1.5px solid var(--border);background:var(--white);color:var(--text-2);cursor:pointer;transition:all .15s}
-.status-btn:hover{border-color:var(--blue);color:var(--blue)}
-.status-btn.selected{border-color:var(--blue);background:var(--blue);color:white}
-.status-btn.sel-inprogress{border-color:var(--amber);background:var(--amber-lt);color:var(--amber)}
-.status-btn.sel-done{border-color:var(--teal);background:var(--teal-lt);color:var(--teal)}
-.status-btn.sel-none{border-color:var(--border);background:#f7f9fc;color:var(--text-3)}
-.save-row{display:flex;align-items:center;gap:10px;margin-top:4px}
-.save-msg{font-size:12px;color:var(--teal)}
-
+/* ── Footer ── */
 .footer{text-align:center;font-size:11px;color:var(--text-3);padding:18px 0 28px;margin-top:8px}
 </style>
 </head>
@@ -144,7 +102,7 @@ td.date{font-size:12px;color:var(--text-2);white-space:nowrap}
 <div class="header">
   <div>
     <h1>วาระการดำรงตำแหน่งผู้บริหาร</h1>
-    <p>ดึงข้อมูลจาก Google Sheets · คำนวณอัตโนมัติ</p>
+    <p>ดึงข้อมูลจาก Google Sheets · คำนวณอัตโนมัติ · <span style="opacity:.8">🔒 สำหรับดูข้อมูลเท่านั้น</span></p>
   </div>
   <div class="hdr-right">
     <div class="chip" id="today-chip"></div>
@@ -157,14 +115,6 @@ td.date{font-size:12px;color:var(--text-2);white-space:nowrap}
 </div>
 <div class="footer" id="footer"></div>
 
-<!-- Side Panel -->
-<div class="overlay" id="overlay" onclick="closePanel()"></div>
-<div class="panel" id="panel">
-  <div class="panel-header">
-    <button class="panel-close" onclick="closePanel()">✕</button>
-    <h3 id="panel-pos">—</h3>
-    <p id="panel-name">—</p>
-  </div>
   <div class="panel-body" id="panel-body"></div>
 </div>
 
@@ -374,7 +324,7 @@ function applyFilter() {
 
   document.getElementById('result-count').textContent=`แสดง ${rows.length} รายการ`;
   document.getElementById('tbody').innerHTML=rows.map(r=>`
-    <tr onclick="openPanel(${r._idx})">
+    <tr>
       <td class="pos">${r['ตำแหน่ง']}</td>
       <td class="name">${r['ชื่อ-สกุล']}</td>
       <td class="date">${fmtDate(r.start)}</td>
@@ -384,145 +334,6 @@ function applyFilter() {
       <td>${evalBadge(r.eval1,r.stEval1)}</td>
       <td>${evalBadge(r.eval3,r.stEval3)}</td>
     </tr>`).join('');
-}
-
-/* ── Panel ── */
-function openPanel(idx) {
-  const r = window._rows[idx];
-  document.getElementById('panel-pos').textContent  = r['ตำแหน่ง'];
-  document.getElementById('panel-name').textContent = r['ชื่อ-สกุล'];
-
-  const dE1 = r.eval1 ? daysDiff(TODAY,r.eval1) : null;
-  const dE3 = r.eval3 ? daysDiff(TODAY,r.eval3) : null;
-  const dEnd= r.end   ? daysDiff(TODAY,r.end)   : null;
-
-  function tlDot(evalDate, st, daysLeft) {
-    if (st==='ประเมินเสร็จสิ้น') return 'done';
-    if (st==='อยู่ระหว่างประเมิน') return 'active';
-    if (daysLeft!==null && daysLeft<0) return 'warn';
-    if (daysLeft!==null && daysLeft<=30) return 'warn';
-    return 'pending';
-  }
-  function recruitDot(st, dEnd) {
-    if (st==='สรรหาเสร็จสิ้น') return 'done';
-    if (st==='อยู่ระหว่างสรรหา') return 'active';
-    if (dEnd!==null && dEnd<0) return 'danger';
-    if (dEnd!==null && dEnd<=180) return 'warn';
-    return 'pending';
-  }
-
-  document.getElementById('panel-body').innerHTML = `
-  <div class="panel-section">
-    <h4>ข้อมูลวาระ</h4>
-    <div class="info-grid">
-      <span class="lbl">วันเริ่มต้น</span><span class="val">${fmtDate(r.start)}</span>
-      <span class="lbl">วันสิ้นสุด</span><span class="val">${fmtDate(r.end)} ${dEnd!==null&&dEnd<0?'<span class="badge b-red" style="font-size:10px">หมดแล้ว '+Math.abs(dEnd)+' วัน</span>':dEnd!==null?'(เหลือ '+dEnd+' วัน)':''}</span>
-      <span class="lbl">ความคืบหน้า</span><span class="val">${r.pct!==null?r.pct+'%':'—'}</span>
-    </div>
-  </div>
-
-  <div class="panel-section">
-    <h4>ไทม์ไลน์</h4>
-    <div class="timeline">
-      <div class="tl-item">
-        <div class="tl-dot done">✓</div>
-        <div class="tl-content">
-          <div class="tl-title">เริ่มดำรงตำแหน่ง</div>
-          <div class="tl-date">${fmtDate(r.start)}</div>
-        </div>
-      </div>
-      <div class="tl-item">
-        <div class="tl-dot ${tlDot(r.eval1,r.stEval1,dE1)}">${r.stEval1==='ประเมินเสร็จสิ้น'?'✓':dE1!==null&&dE1<0?'✓':'1'}</div>
-        <div class="tl-content">
-          <div class="tl-title">ประเมินผล ครั้งที่ 1 (1 ปี)</div>
-          <div class="tl-date">${fmtDate(r.eval1)}</div>
-          <div class="tl-days">${dE1===null?'':dE1<0?`<span style="color:var(--text-3)">ผ่านมาแล้ว ${Math.abs(dE1)} วัน</span>`:dE1===0?`<span style="color:var(--red)">วันนี้</span>`:`<span style="color:${dE1<=30?'var(--red)':'var(--text-2)'}">อีก ${dE1} วัน</span>`}</div>
-          ${r.stEval1!=='—'?`<div style="margin-top:4px">${evalBadge(r.eval1,r.stEval1)}</div>`:''}
-        </div>
-      </div>
-      <div class="tl-item">
-        <div class="tl-dot ${tlDot(r.eval3,r.stEval3,dE3)}">${r.stEval3==='ประเมินเสร็จสิ้น'?'✓':dE3!==null&&dE3<0?'✓':'3'}</div>
-        <div class="tl-content">
-          <div class="tl-title">ประเมินผล ครั้งที่ 2 (3 ปี)</div>
-          <div class="tl-date">${fmtDate(r.eval3)}</div>
-          <div class="tl-days">${dE3===null?'':dE3<0?`<span style="color:var(--text-3)">ผ่านมาแล้ว ${Math.abs(dE3)} วัน</span>`:dE3===0?`<span style="color:var(--red)">วันนี้</span>`:`<span style="color:${dE3<=30?'var(--red)':'var(--text-2)'}">อีก ${dE3} วัน</span>`}</div>
-          ${r.stEval3!=='—'?`<div style="margin-top:4px">${evalBadge(r.eval3,r.stEval3)}</div>`:''}
-        </div>
-      </div>
-      <div class="tl-item">
-        <div class="tl-dot ${recruitDot(r.stRecruit,dEnd)}">${r.stRecruit==='สรรหาเสร็จสิ้น'?'✓':dEnd!==null&&dEnd<0?'!':'↻'}</div>
-        <div class="tl-content">
-          <div class="tl-title">สิ้นสุดวาระ / สรรหาผู้บริหาร</div>
-          <div class="tl-date">${fmtDate(r.end)}</div>
-          <div class="tl-days">${dEnd===null?'':dEnd<0?`<span style="color:var(--red)">เกินวาระ ${Math.abs(dEnd)} วัน</span>`:dEnd<=180?`<span style="color:var(--amber)">เหลืออีก ${dEnd} วัน — ควรเริ่มสรรหา</span>`:`<span style="color:var(--text-2)">เหลืออีก ${dEnd} วัน</span>`}</div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <div class="panel-section">
-    <h4>อัปเดตสถานะ</h4>
-    <div class="status-group">
-      <div class="status-label">🔍 การสรรหา</div>
-      <div class="status-options" id="opt-recruit">${STATUS_RECRUIT.map(s=>`<button class="status-btn${r.stRecruit===s?' sel-'+selClass(s):''}" onclick="selectStatus(${idx},'สถานะสรรหา','${s}',this,'opt-recruit')">${s}</button>`).join('')}</div>
-    </div>
-    <div class="status-group">
-      <div class="status-label">📋 การประเมิน 1 ปี</div>
-      <div class="status-options" id="opt-eval1">${STATUS_EVAL.map(s=>`<button class="status-btn${r.stEval1===s?' sel-'+selClass(s):''}" onclick="selectStatus(${idx},'สถานะประเมิน_1ปี','${s}',this,'opt-eval1')">${s}</button>`).join('')}</div>
-    </div>
-    <div class="status-group">
-      <div class="status-label">📋 การประเมิน 3 ปี</div>
-      <div class="status-options" id="opt-eval3">${STATUS_EVAL.map(s=>`<button class="status-btn${r.stEval3===s?' sel-'+selClass(s):''}" onclick="selectStatus(${idx},'สถานะประเมิน_3ปี','${s}',this,'opt-eval3')">${s}</button>`).join('')}</div>
-    </div>
-    <div class="save-row">
-      <button class="btn btn-primary" onclick="saveStatus(${idx})">บันทึก</button>
-      <span class="save-msg" id="save-msg"></span>
-    </div>
-  </div>`;
-
-  document.getElementById('overlay').classList.add('open');
-  document.getElementById('panel').classList.add('open');
-}
-
-function selClass(s){ return s==='—'?'none':s.includes('ระหว่าง')?'inprogress':'done'; }
-
-const _pending = {}; // temp state before save
-
-function selectStatus(idx, field, val, btn, groupId) {
-  document.querySelectorAll(`#${groupId} .status-btn`).forEach(b=>{b.className='status-btn'});
-  btn.className=`status-btn sel-${selClass(val)}`;
-  if(!_pending[idx]) _pending[idx]={};
-  _pending[idx][field]=val;
-}
-
-async function saveStatus(idx) {
-  const msg = document.getElementById('save-msg');
-  msg.textContent='กำลังบันทึก…'; msg.style.color='var(--text-3)';
-  const changes = _pending[idx]||{};
-  if(Object.keys(changes).length===0){ msg.textContent='ไม่มีการเปลี่ยนแปลง'; return; }
-  try {
-    for (const [field,value] of Object.entries(changes)) {
-      await fetch(API, {method:'POST', body: JSON.stringify({rowIndex:idx, field, value})});
-      window._rows[idx][field==='สถานะสรรหา'?'stRecruit':field==='สถานะประเมิน_1ปี'?'stEval1':'stEval3'] = value;
-      window._rows[idx][field] = value;
-    }
-    delete _pending[idx];
-    msg.textContent='✓ บันทึกแล้ว'; msg.style.color='var(--teal)';
-    applyFilter();
-    renderAlertSection();
-    setTimeout(()=>{ msg.textContent=''; },3000);
-  } catch(e) {
-    msg.textContent='เกิดข้อผิดพลาด กรุณาลองใหม่'; msg.style.color='var(--red)';
-  }
-}
-
-function renderAlertSection() {
-  // re-render just alerts without full re-render
-}
-
-function closePanel() {
-  document.getElementById('overlay').classList.remove('open');
-  document.getElementById('panel').classList.remove('open');
 }
 
 async function loadData() {
