@@ -94,7 +94,7 @@ td.date{font-size:12px;color:var(--text-2);white-space:nowrap}
 .eval-done{color:var(--text-3)}.eval-soon{color:var(--red);font-weight:600}.eval-pending{color:var(--text-2)}.eval-na{color:var(--border)}
 
 /* ── Footer ── */
-.footer{text-align:center;font-size:11px;color:var(--text-3);padding:18px 0 28px;margin-top:8px}
+.footer{background:linear-gradient(135deg,var(--navy) 0%,var(--navy-mid) 100%);color:rgba(255,255,255,.55);font-size:12px;padding:18px 28px;margin-top:24px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px}.footer a{color:rgba(255,255,255,.7);text-decoration:none}.footer a:hover{color:white}.footer .footer-dev{color:rgba(255,255,255,.8);font-weight:500}
 </style>
 </head>
 <body>
@@ -113,7 +113,10 @@ td.date{font-size:12px;color:var(--text-2);white-space:nowrap}
 <div class="main" id="main">
   <div class="state-box"><div class="spinner"></div><div>กำลังโหลดข้อมูล…</div></div>
 </div>
-<div class="footer" id="footer"></div>
+<div class="footer" id="footer">
+  <span>© 2569 มหาวิทยาลัย — สงวนลิขสิทธิ์ตามพระราชบัญญัติลิขสิทธิ์ พ.ศ. 2537 ห้ามทำซ้ำ ดัดแปลง หรือเผยแพร่โดยไม่ได้รับอนุญาต</span>
+  <span class="footer-dev">⚙ พัฒนาโดย Tanawat Yodburee</span>
+</div>
 
   <div class="panel-body" id="panel-body"></div>
 </div>
@@ -346,7 +349,7 @@ async function loadData() {
                     .map((r,i)=>{ const m={}; Object.keys(r).forEach(k=>{ m[k]=r[k]===null||r[k]===undefined?'':String(r[k]); }); return m; })
                     .map(calcRow);
     renderDashboard(rows);
-    document.getElementById('footer').textContent=`อัปเดตล่าสุด: ${new Date().toLocaleString('th-TH')}`;
+    const ftEl=document.getElementById('footer'); if(ftEl){ const upd=document.createElement('span'); upd.style.cssText='font-size:11px;opacity:.6'; upd.textContent='อัปเดตล่าสุด: '+new Date().toLocaleString('th-TH'); ftEl.appendChild(upd); }
   } catch(e) {
     document.getElementById('main').innerHTML=`<div class="state-box">
       <div style="font-size:32px;margin-bottom:12px">⚠️</div>
