@@ -93,6 +93,21 @@ td.date{font-size:12px;color:var(--text-2);white-space:nowrap}
 .eval-cell{font-size:11px;white-space:nowrap;display:flex;flex-direction:column;gap:3px}
 .eval-date-line{display:flex;align-items:center;gap:4px}
 .eval-done{color:var(--text-3)}.eval-soon{color:var(--red);font-weight:600}.eval-pending{color:var(--text-2)}.eval-na{color:var(--border)}
+.ftab.active-expired{border-color:var(--red);background:var(--red);color:white}
+.unit-timeline{display:flex;flex-direction:column;gap:0}
+.ut-item{display:flex;gap:12px;position:relative}
+.ut-item:not(:last-child)::after{content:'';position:absolute;left:10px;top:22px;bottom:-4px;width:2px;background:var(--border)}
+.ut-dot{width:22px;height:22px;border-radius:50%;border:2px solid var(--border);background:var(--white);display:flex;align-items:center;justify-content:center;font-size:10px;flex-shrink:0;z-index:1}
+.ut-dot.current{background:var(--blue);border-color:var(--blue);color:white}
+.ut-dot.past{background:#f0f3f8;border-color:var(--border);color:var(--text-3)}
+.ut-content{padding-bottom:16px;flex:1}
+.ut-title{font-size:13px;font-weight:500;color:var(--text)}
+.ut-date{font-size:11px;color:var(--text-3);margin-top:1px}
+.ut-reason{font-size:11px;color:var(--text-2);margin-top:2px}
+.archive-form{display:flex;flex-direction:column;gap:8px;background:#f7f9fc;border:1px solid var(--border);border-radius:var(--radius);padding:12px;margin-top:10px}
+.archive-form label{font-size:11px;color:var(--text-3);font-weight:500}
+.archive-form input,.archive-form select{font-family:inherit;font-size:12px;padding:6px 8px;border:1px solid var(--border);border-radius:6px;outline:none}
+.archive-msg{font-size:12px;margin-top:4px}
 
 /* ── Side Panel ── */
 .overlay{position:fixed;inset:0;background:rgba(0,0,0,.35);z-index:100;display:none;animation:fadeIn .2s}
@@ -359,8 +374,13 @@ function renderDashboard(rows) {
     <button class="ftab active" id="tab-all" onclick="setTab('all')">ทั้งหมด</button>
     <button class="ftab" id="tab-recruit" onclick="setTab('recruit')">🔍 การสรรหา</button>
     <button class="ftab" id="tab-eval" onclick="setTab('eval')">📋 การประเมิน</button>
+    <button class="ftab" id="tab-expired" onclick="setTab('expired')">✅ ครบวาระแล้ว</button>
   </div>
   <div class="filters">
+    <select id="f-unit" onchange="applyFilter()">
+      <option value="all">ทุกหน่วยงาน</option>
+      ${[...new Set(rows.map(r=>r['หน่วยงาน']).filter(Boolean))].sort().map(u=>`<option value="${u}">${u}</option>`).join('')}
+    </select>
     <select id="f-status" onchange="applyFilter()">
       <option value="all">ทุกสถานะ</option>
       <option value="expired">หมดวาระแล้ว</option>
@@ -370,12 +390,13 @@ function renderDashboard(rows) {
       <option value="eval30">ใกล้รอบประเมิน ≤ 60 วัน</option>
       <option value="active">ปกติ</option>
     </select>
-    <input type="text" id="f-search" placeholder="ค้นหาตำแหน่ง / ชื่อ…" oninput="applyFilter()">
+    <input type="text" id="f-search" placeholder="ค้นหาหน่วยงาน / ตำแหน่ง / ชื่อ…" oninput="applyFilter()">
     <span class="result-count" id="result-count"></span>
   </div>
   <div class="table-wrap">
     <table>
       <thead><tr>
+        <th style="min-width:140px">หน่วยงาน</th>
         <th style="min-width:180px">ตำแหน่ง</th>
         <th style="min-width:160px">ชื่อ-สกุล</th>
         <th class="sortable" onclick="sortBy('start')" id="th-start">วันเริ่มต้น<span class="sort-icon">⇅</span></th>
@@ -397,15 +418,11 @@ let _sortCol = null, _sortDir = 1, _activeTab = 'all';
 
 function setTab(tab) {
   _activeTab = tab;
-  ['all','recruit','eval'].forEach(t => {
+  ['all','recruit','eval','expired'].forEach(t => {
     const el = document.getElementById('tab-'+t);
     if (!el) return;
-    el.className = 'ftab' + (t===tab ? (tab==='recruit'?' active-recruit':tab==='eval'?' active-eval':' active') : '');
+    el.className = 'ftab' + (t===tab ? (tab==='recruit'?' active-recruit':tab==='eval'?' active-eval':tab==='expired'?' active-expired':' active') : '');
   });
-  // auto-set status filter based on tab
-  const sel = document.getElementById('f-status');
-  if (tab==='recruit') sel.value = 'all';
-  if (tab==='eval')    sel.value = 'all';
   applyFilter();
 }
 
@@ -424,6 +441,7 @@ function sortBy(col) {
 
 function applyFilter() {
   const status = document.getElementById('f-status') ? document.getElementById('f-status').value : 'all';
+  const unit = document.getElementById('f-unit') ? document.getElementById('f-unit').value : 'all';
   const q = document.getElementById('f-search') ? document.getElementById('f-search').value.toLowerCase() : '';
   let rows = (window._rows||[]).filter(r=>{
     // Tab filter
@@ -435,6 +453,11 @@ function applyFilter() {
       const relevant = r.statusKey==='eval30' || r.stEval1!=='—' || r.stEval3!=='—';
       if (!relevant) return false;
     }
+    if (_activeTab==='expired') {
+      if (r.statusKey!=='expired') return false;
+    }
+    // Unit filter
+    if (unit!=='all' && r['หน่วยงาน']!==unit) return false;
     // Status filter
     if (status==='expired' && r.statusKey!=='expired') return false;
     if (status==='recruit180' && r.statusKey!=='recruit180') return false;
@@ -443,7 +466,7 @@ function applyFilter() {
     if (status==='inprogress-recruit' && r.stRecruit!=='อยู่ระหว่างสรรหา') return false;
     if (status==='inprogress-eval' && r.stEval1!=='อยู่ระหว่างประเมิน' && r.stEval3!=='อยู่ระหว่างประเมิน') return false;
     // Search
-    if (q&&!r['ตำแหน่ง'].toLowerCase().includes(q)&&!r['ชื่อ-สกุล'].toLowerCase().includes(q)) return false;
+    if (q&&!(r['หน่วยงาน']||'').toLowerCase().includes(q)&&!r['ตำแหน่ง'].toLowerCase().includes(q)&&!r['ชื่อ-สกุล'].toLowerCase().includes(q)) return false;
     return true;
   });
 
@@ -463,6 +486,7 @@ function applyFilter() {
   document.getElementById('result-count').textContent=`แสดง ${rows.length} รายการ`;
   document.getElementById('tbody').innerHTML=rows.map(r=>`
     <tr onclick="openPanel(${r._idx})">
+      <td class="pos">${r['หน่วยงาน']||'—'}</td>
       <td class="pos">${r['ตำแหน่ง']}</td>
       <td class="name">${r['ชื่อ-สกุล']}</td>
       <td class="date">${fmtDate(r.start)}</td>
@@ -549,6 +573,35 @@ function openPanel(idx) {
   </div>
 
   <div class="panel-section">
+    <h4>ประวัติหน่วยงาน — ${r['หน่วยงาน']||'—'}</h4>
+    <div class="unit-timeline" id="unit-history-tl"></div>
+  </div>
+
+  <div class="panel-section">
+    <h4>บันทึกประวัติ & เริ่มวาระใหม่</h4>
+    <div class="archive-form">
+      <label>วันสิ้นสุดจริง</label>
+      <input type="date" id="ar-enddate" value="${new Date().toISOString().slice(0,10)}">
+      <label>เหตุผลที่พ้นวาระ</label>
+      <select id="ar-reason">
+        <option value="ครบวาระ">ครบวาระ</option>
+        <option value="ลาออก">ลาออก</option>
+        <option value="อื่นๆ">อื่นๆ</option>
+      </select>
+      <label>หมายเหตุ (ถ้ามี)</label>
+      <input type="text" id="ar-note" placeholder="หมายเหตุเพิ่มเติม">
+      <label>ชื่อ-สกุล ผู้ดำรงตำแหน่งคนใหม่ (เว้นว่างได้ถ้ายังไม่มี)</label>
+      <input type="text" id="ar-newname" placeholder="ชื่อ-สกุล">
+      <label>วันเริ่มต้นวาระใหม่</label>
+      <input type="date" id="ar-newstart">
+      <div class="save-row">
+        <button class="btn btn-primary" onclick="archiveAndReplace(${idx})">บันทึกประวัติ & เริ่มวาระใหม่</button>
+        <span class="archive-msg" id="archive-msg"></span>
+      </div>
+    </div>
+  </div>
+
+  <div class="panel-section">
     <h4>อัปเดตสถานะ</h4>
     <div class="status-group">
       <div class="status-label">🔍 การสรรหา</div>
@@ -568,8 +621,54 @@ function openPanel(idx) {
     </div>
   </div>`;
 
+  renderUnitHistory(r['หน่วยงาน']);
+
   document.getElementById('overlay').classList.add('open');
   document.getElementById('panel').classList.add('open');
+}
+
+function renderUnitHistory(unit) {
+  const el = document.getElementById('unit-history-tl');
+  if (!el) return;
+  const items = (window._history||[]).filter(h=>(h['หน่วยงาน']||'')===unit)
+    .map(h=>({ name:h['ชื่อ-สกุล'], pos:h['ตำแหน่ง'], start:parseDate(h['วันเริ่มต้น']), end:parseDate(h['วันสิ้นสุดจริง']), reason:h['เหตุผลที่พ้นวาระ'] }))
+    .sort((a,b)=>{ const ta=a.start?a.start.getTime():-Infinity, tb=b.start?b.start.getTime():-Infinity; return tb-ta; });
+  el.innerHTML = items.length===0
+    ? '<p class="no-alerts">ยังไม่มีประวัติของหน่วยงานนี้</p>'
+    : items.map(it=>`
+      <div class="ut-item">
+        <div class="ut-dot past">✓</div>
+        <div class="ut-content">
+          <div class="ut-title">${it.pos} — ${it.name||'(ไม่ระบุ)'}</div>
+          <div class="ut-date">${fmtDate(it.start)} — ${fmtDate(it.end)}</div>
+          ${it.reason?`<div class="ut-reason">เหตุผลที่พ้นวาระ: ${it.reason}</div>`:''}
+        </div>
+      </div>`).join('');
+}
+
+async function archiveAndReplace(idx) {
+  const msg = document.getElementById('archive-msg');
+  const r = window._rows[idx];
+  const endDate = document.getElementById('ar-enddate').value;
+  const reason  = document.getElementById('ar-reason').value;
+  const note    = document.getElementById('ar-note').value;
+  const newName = document.getElementById('ar-newname').value;
+  const newStart= document.getElementById('ar-newstart').value;
+
+  if (!endDate) { msg.textContent='กรุณาระบุวันสิ้นสุดจริง'; msg.style.color='var(--red)'; return; }
+  if (!confirm(`ยืนยันบันทึกประวัติของ "${r['ชื่อ-สกุล']}" (${r['ตำแหน่ง']}) และเริ่มวาระใหม่?`)) return;
+
+  msg.textContent='กำลังบันทึก…'; msg.style.color='var(--text-3)';
+  try {
+    await fetch(API, { method:'POST', body: JSON.stringify({
+      action:'archive', rowIndex: idx, endDate, reason, note, newName, newStart
+    })});
+    msg.textContent='✓ บันทึกแล้ว กำลังโหลดข้อมูลใหม่…'; msg.style.color='var(--teal)';
+    closePanel();
+    await loadData();
+  } catch(e) {
+    msg.textContent='เกิดข้อผิดพลาด กรุณาลองใหม่'; msg.style.color='var(--red)';
+  }
 }
 
 function selClass(s){ return s==='—'?'none':s.includes('ระหว่าง')?'inprogress':'done'; }
@@ -619,9 +718,12 @@ async function loadData() {
     const res = await fetch(API);
     if(!res.ok) throw new Error(`HTTP ${res.status}`);
     const raw = await res.json();
-    const rows = raw.filter(r=>r['ตำแหน่ง']&&String(r['ตำแหน่ง']).trim()!=='')
+    const currentRaw = Array.isArray(raw) ? raw : (raw.current||[]);
+    const historyRaw = Array.isArray(raw) ? [] : (raw.history||[]);
+    const rows = currentRaw.filter(r=>r['ตำแหน่ง']&&String(r['ตำแหน่ง']).trim()!=='')
                     .map((r,i)=>{ const m={}; Object.keys(r).forEach(k=>{ m[k]=r[k]===null||r[k]===undefined?'':String(r[k]); }); return m; })
                     .map(calcRow);
+    window._history = historyRaw;
     renderDashboard(rows);
     const ftEl=document.getElementById('footer'); if(ftEl){ const upd=document.createElement('span'); upd.style.cssText='font-size:11px;opacity:.6'; upd.textContent='อัปเดตล่าสุด: '+new Date().toLocaleString('th-TH'); ftEl.appendChild(upd); }
   } catch(e) {

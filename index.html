@@ -92,6 +92,33 @@ td.date{font-size:12px;color:var(--text-2);white-space:nowrap}
 .eval-cell{font-size:11px;white-space:nowrap;display:flex;flex-direction:column;gap:3px}
 .eval-date-line{display:flex;align-items:center;gap:4px}
 .eval-done{color:var(--text-3)}.eval-soon{color:var(--red);font-weight:600}.eval-pending{color:var(--text-2)}.eval-na{color:var(--border)}
+.ftab.active-expired{border-color:var(--red);background:var(--red);color:white}
+tbody tr{cursor:pointer}
+
+/* ── Side Panel (read-only) ── */
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.35);z-index:100;display:none;animation:fadeIn .2s}
+.overlay.open{display:block}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+.panel{position:fixed;right:0;top:0;bottom:0;width:420px;max-width:100vw;background:var(--white);z-index:101;box-shadow:-4px 0 24px rgba(0,0,0,.12);display:flex;flex-direction:column;transform:translateX(100%);transition:transform .25s ease}
+.panel.open{transform:translateX(0)}
+.panel-header{background:var(--navy);color:white;padding:16px 20px;flex-shrink:0;position:relative}
+.panel-header h3{font-size:15px;font-weight:600}
+.panel-header p{font-size:12px;opacity:.7;margin-top:3px}
+.panel-close{position:absolute;top:14px;right:16px;background:none;border:none;color:white;font-size:22px;cursor:pointer;opacity:.7;line-height:1}
+.panel-close:hover{opacity:1}
+.panel-body{flex:1;overflow-y:auto;padding:20px}
+.panel-section{margin-bottom:24px}
+.panel-section h4{font-size:12px;font-weight:600;color:var(--text-3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px;padding-bottom:6px;border-bottom:1px solid var(--border)}
+.unit-timeline{display:flex;flex-direction:column;gap:0}
+.ut-item{display:flex;gap:12px;position:relative}
+.ut-item:not(:last-child)::after{content:'';position:absolute;left:10px;top:22px;bottom:-4px;width:2px;background:var(--border)}
+.ut-dot{width:22px;height:22px;border-radius:50%;border:2px solid var(--border);background:var(--white);display:flex;align-items:center;justify-content:center;font-size:10px;flex-shrink:0;z-index:1}
+.ut-dot.current{background:var(--blue);border-color:var(--blue);color:white}
+.ut-dot.past{background:#f0f3f8;border-color:var(--border);color:var(--text-3)}
+.ut-content{padding-bottom:16px;flex:1}
+.ut-title{font-size:13px;font-weight:500;color:var(--text)}
+.ut-date{font-size:11px;color:var(--text-3);margin-top:1px}
+.ut-reason{font-size:11px;color:var(--text-2);margin-top:2px}
 
 /* ── Footer ── */
 .footer{background:linear-gradient(135deg,var(--navy) 0%,var(--navy-mid) 100%);color:rgba(255,255,255,.55);font-size:12px;padding:18px 28px;margin-top:24px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px}.footer a{color:rgba(255,255,255,.7);text-decoration:none}.footer a:hover{color:white}.footer .footer-dev{color:rgba(255,255,255,.8);font-weight:500}
@@ -118,6 +145,14 @@ td.date{font-size:12px;color:var(--text-2);white-space:nowrap}
   <span class="footer-dev">⚙ พัฒนาโดย Tanawat Yodburee</span>
 </div>
 
+<!-- Side Panel: timeline หน่วยงาน (read-only) -->
+<div class="overlay" id="overlay" onclick="closePanel()"></div>
+<div class="panel" id="panel">
+  <div class="panel-header">
+    <button class="panel-close" onclick="closePanel()">✕</button>
+    <h3 id="panel-unit">—</h3>
+    <p id="panel-pos-name">—</p>
+  </div>
   <div class="panel-body" id="panel-body"></div>
 </div>
 
@@ -224,8 +259,13 @@ function renderDashboard(rows) {
     <button class="ftab active" id="tab-all" onclick="setTab('all')">ทั้งหมด</button>
     <button class="ftab" id="tab-recruit" onclick="setTab('recruit')">🔍 การสรรหา</button>
     <button class="ftab" id="tab-eval" onclick="setTab('eval')">📋 การประเมิน</button>
+    <button class="ftab" id="tab-expired" onclick="setTab('expired')">✅ ครบวาระแล้ว</button>
   </div>
   <div class="filters">
+    <select id="f-unit" onchange="applyFilter()">
+      <option value="all">ทุกหน่วยงาน</option>
+      ${[...new Set(rows.map(r=>r['หน่วยงาน']).filter(Boolean))].sort().map(u=>`<option value="${u}">${u}</option>`).join('')}
+    </select>
     <select id="f-status" onchange="applyFilter()">
       <option value="all">ทุกสถานะ</option>
       <option value="expired">หมดวาระแล้ว</option>
@@ -235,12 +275,13 @@ function renderDashboard(rows) {
       <option value="eval30">ใกล้รอบประเมิน ≤ 60 วัน</option>
       <option value="active">ปกติ</option>
     </select>
-    <input type="text" id="f-search" placeholder="ค้นหาตำแหน่ง / ชื่อ…" oninput="applyFilter()">
+    <input type="text" id="f-search" placeholder="ค้นหาหน่วยงาน / ตำแหน่ง / ชื่อ…" oninput="applyFilter()">
     <span class="result-count" id="result-count"></span>
   </div>
   <div class="table-wrap">
     <table>
       <thead><tr>
+        <th style="min-width:140px">หน่วยงาน</th>
         <th style="min-width:180px">ตำแหน่ง</th>
         <th style="min-width:160px">ชื่อ-สกุล</th>
         <th class="sortable" onclick="sortBy('start')" id="th-start">วันเริ่มต้น<span class="sort-icon">⇅</span></th>
@@ -262,15 +303,11 @@ let _sortCol = null, _sortDir = 1, _activeTab = 'all';
 
 function setTab(tab) {
   _activeTab = tab;
-  ['all','recruit','eval'].forEach(t => {
+  ['all','recruit','eval','expired'].forEach(t => {
     const el = document.getElementById('tab-'+t);
     if (!el) return;
-    el.className = 'ftab' + (t===tab ? (tab==='recruit'?' active-recruit':tab==='eval'?' active-eval':' active') : '');
+    el.className = 'ftab' + (t===tab ? (tab==='recruit'?' active-recruit':tab==='eval'?' active-eval':tab==='expired'?' active-expired':' active') : '');
   });
-  // auto-set status filter based on tab
-  const sel = document.getElementById('f-status');
-  if (tab==='recruit') sel.value = 'all';
-  if (tab==='eval')    sel.value = 'all';
   applyFilter();
 }
 
@@ -289,6 +326,7 @@ function sortBy(col) {
 
 function applyFilter() {
   const status = document.getElementById('f-status') ? document.getElementById('f-status').value : 'all';
+  const unit = document.getElementById('f-unit') ? document.getElementById('f-unit').value : 'all';
   const q = document.getElementById('f-search') ? document.getElementById('f-search').value.toLowerCase() : '';
   let rows = (window._rows||[]).filter(r=>{
     // Tab filter
@@ -300,6 +338,11 @@ function applyFilter() {
       const relevant = r.statusKey==='eval30' || r.stEval1!=='—' || r.stEval3!=='—';
       if (!relevant) return false;
     }
+    if (_activeTab==='expired') {
+      if (r.statusKey!=='expired') return false;
+    }
+    // Unit filter
+    if (unit!=='all' && r['หน่วยงาน']!==unit) return false;
     // Status filter
     if (status==='expired' && r.statusKey!=='expired') return false;
     if (status==='recruit180' && r.statusKey!=='recruit180') return false;
@@ -308,7 +351,7 @@ function applyFilter() {
     if (status==='inprogress-recruit' && r.stRecruit!=='อยู่ระหว่างสรรหา') return false;
     if (status==='inprogress-eval' && r.stEval1!=='อยู่ระหว่างประเมิน' && r.stEval3!=='อยู่ระหว่างประเมิน') return false;
     // Search
-    if (q&&!r['ตำแหน่ง'].toLowerCase().includes(q)&&!r['ชื่อ-สกุล'].toLowerCase().includes(q)) return false;
+    if (q&&!(r['หน่วยงาน']||'').toLowerCase().includes(q)&&!r['ตำแหน่ง'].toLowerCase().includes(q)&&!r['ชื่อ-สกุล'].toLowerCase().includes(q)) return false;
     return true;
   });
 
@@ -327,7 +370,8 @@ function applyFilter() {
 
   document.getElementById('result-count').textContent=`แสดง ${rows.length} รายการ`;
   document.getElementById('tbody').innerHTML=rows.map(r=>`
-    <tr>
+    <tr onclick="openPanel('${(r['หน่วยงาน']||'').replace(/'/g,"\\'")}')">
+      <td class="pos">${r['หน่วยงาน']||'—'}</td>
       <td class="pos">${r['ตำแหน่ง']}</td>
       <td class="name">${r['ชื่อ-สกุล']}</td>
       <td class="date">${fmtDate(r.start)}</td>
@@ -339,15 +383,61 @@ function applyFilter() {
     </tr>`).join('');
 }
 
+/* ── Side Panel: Timeline หน่วยงาน (read-only) ── */
+function openPanel(unit) {
+  document.getElementById('panel-unit').textContent = unit || 'ไม่ระบุหน่วยงาน';
+
+  const currentItems = (window._rows||[]).filter(r=>(r['หน่วยงาน']||'')===unit)
+    .map(r=>({ name:r['ชื่อ-สกุล'], pos:r['ตำแหน่ง'], start:r.start, end:null, reason:null, isCurrent:true }));
+  const historyItems = (window._history||[]).filter(h=>(h['หน่วยงาน']||'')===unit)
+    .map(h=>({ name:h['ชื่อ-สกุล'], pos:h['ตำแหน่ง'], start:parseDate(h['วันเริ่มต้น']), end:parseDate(h['วันสิ้นสุดจริง']), reason:h['เหตุผลที่พ้นวาระ'], isCurrent:false }));
+
+  const items = [...currentItems, ...historyItems].sort((a,b)=>{
+    const ta = a.start ? a.start.getTime() : -Infinity;
+    const tb = b.start ? b.start.getTime() : -Infinity;
+    return tb - ta; // ล่าสุดก่อน
+  });
+
+  document.getElementById('panel-pos-name').textContent = items.length
+    ? `${items.length} รายการในประวัติ` : 'ไม่มีข้อมูลประวัติ';
+
+  document.getElementById('panel-body').innerHTML = `
+  <div class="panel-section">
+    <h4>Timeline การดำรงตำแหน่ง</h4>
+    <div class="unit-timeline">
+      ${items.length===0 ? '<p class="no-alerts">ไม่มีข้อมูล</p>' : items.map(it=>`
+        <div class="ut-item">
+          <div class="ut-dot ${it.isCurrent?'current':'past'}">${it.isCurrent?'●':'✓'}</div>
+          <div class="ut-content">
+            <div class="ut-title">${it.pos} — ${it.name||'(ว่าง)'}${it.isCurrent?' <span class="badge b-blue" style="font-size:10px">ปัจจุบัน</span>':''}</div>
+            <div class="ut-date">${fmtDate(it.start)} ${it.isCurrent?'— ปัจจุบัน':'— '+fmtDate(it.end)}</div>
+            ${it.reason?`<div class="ut-reason">เหตุผลที่พ้นวาระ: ${it.reason}</div>`:''}
+          </div>
+        </div>`).join('')}
+    </div>
+  </div>`;
+
+  document.getElementById('overlay').classList.add('open');
+  document.getElementById('panel').classList.add('open');
+}
+
+function closePanel() {
+  document.getElementById('overlay').classList.remove('open');
+  document.getElementById('panel').classList.remove('open');
+}
+
 async function loadData() {
   document.getElementById('main').innerHTML=`<div class="state-box"><div class="spinner"></div><div>กำลังโหลดข้อมูล…</div></div>`;
   try {
     const res = await fetch(API);
     if(!res.ok) throw new Error(`HTTP ${res.status}`);
     const raw = await res.json();
-    const rows = raw.filter(r=>r['ตำแหน่ง']&&String(r['ตำแหน่ง']).trim()!=='')
+    const currentRaw = Array.isArray(raw) ? raw : (raw.current||[]);
+    const historyRaw = Array.isArray(raw) ? [] : (raw.history||[]);
+    const rows = currentRaw.filter(r=>r['ตำแหน่ง']&&String(r['ตำแหน่ง']).trim()!=='')
                     .map((r,i)=>{ const m={}; Object.keys(r).forEach(k=>{ m[k]=r[k]===null||r[k]===undefined?'':String(r[k]); }); return m; })
                     .map(calcRow);
+    window._history = historyRaw;
     renderDashboard(rows);
     const ftEl=document.getElementById('footer'); if(ftEl){ const upd=document.createElement('span'); upd.style.cssText='font-size:11px;opacity:.6'; upd.textContent='อัปเดตล่าสุด: '+new Date().toLocaleString('th-TH'); ftEl.appendChild(upd); }
   } catch(e) {
