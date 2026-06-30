@@ -472,6 +472,7 @@ function sortBy(col) {
 }
 
 function applyFilter() {
+  if (_activeTab==='expired') { renderExpiredTab(); return; }
   const status = document.getElementById('f-status') ? document.getElementById('f-status').value : 'all';
   const unit = document.getElementById('f-unit') ? document.getElementById('f-unit').value : 'all';
   const q = document.getElementById('f-search') ? document.getElementById('f-search').value.toLowerCase() : '';
@@ -778,6 +779,62 @@ async function submitAddNew() {
   } catch(e) {
     msg.textContent='เกิดข้อผิดพลาด กรุณาลองใหม่'; msg.style.color='var(--red)';
   }
+}
+
+function renderExpiredTab() {
+  const unit = document.getElementById('f-unit') ? document.getElementById('f-unit').value : 'all';
+  const q = document.getElementById('f-search') ? document.getElementById('f-search').value.toLowerCase() : '';
+
+  const fromCurrent = (window._rows||[]).filter(r=>r.statusKey==='expired').map(r=>({
+    source:'current', idx:r._idx, unit:r['หน่วยงาน']||'', pos:r['ตำแหน่ง'], name:r['ชื่อ-สกุล'],
+    start:r.start, end:r.end, label:'รอการสรรหา', cls:'b-red'
+  }));
+  const fromHistory = (window._history||[]).map(h=>({
+    source:'history', idx:null, unit:h['หน่วยงาน']||'', pos:h['ตำแหน่ง'], name:h['ชื่อ-สกุล'],
+    start:parseDate(h['วันเริ่มต้น']), end:parseDate(h['วันสิ้นสุดจริง']),
+    label:h['เหตุผลที่พ้นวาระ']||'พ้นวาระแล้ว', cls:'b-gray'
+  }));
+
+  let items = [...fromCurrent, ...fromHistory].filter(it=>{
+    if (unit!=='all' && it.unit!==unit) return false;
+    if (q && !it.unit.toLowerCase().includes(q) && !(it.pos||'').toLowerCase().includes(q) && !(it.name||'').toLowerCase().includes(q)) return false;
+    return true;
+  });
+  items.sort((a,b)=>{
+    const ta = a.end ? a.end.getTime() : -Infinity;
+    const tb = b.end ? b.end.getTime() : -Infinity;
+    return tb - ta;
+  });
+
+  document.getElementById('result-count').textContent=`แสดง ${items.length} รายการ`;
+  document.getElementById('tbody').innerHTML = items.length===0
+    ? `<tr><td colspan="9" style="text-align:center;color:var(--text-3);padding:20px">ไม่มีรายการ</td></tr>`
+    : items.map(it=>`
+      <tr onclick="${it.source==='current' ? `openPanel(${it.idx})` : `openHistoryUnitView('${(it.unit||'').replace(/'/g,"\\'")}','${(it.pos||'').replace(/'/g,"\\'")}','${(it.name||'').replace(/'/g,"\\'")}')`}">
+        <td class="pos">${it.unit||'—'}</td>
+        <td class="pos">${it.pos||'—'}</td>
+        <td class="name">${it.name||'—'}</td>
+        <td class="date">${fmtDate(it.start)}</td>
+        <td class="date">${fmtDate(it.end)}</td>
+        <td>—</td>
+        <td><span class="badge ${it.cls}">⬤ ${it.label}</span></td>
+        <td>—</td>
+        <td>—</td>
+      </tr>`).join('');
+}
+
+/* Panel แบบดูอย่างเดียว สำหรับรายการที่ archive ไปแล้ว (ไม่มีแถวจริงให้แก้ไข) */
+function openHistoryUnitView(unit, pos, name) {
+  document.getElementById('panel-pos').textContent = pos;
+  document.getElementById('panel-name').textContent = name + ' (ประวัติ — แก้ไขไม่ได้)';
+  document.getElementById('panel-body').innerHTML = `
+  <div class="panel-section">
+    <h4>ประวัติหน่วยงาน — ${unit||'—'}</h4>
+    <div class="unit-timeline" id="unit-history-tl"></div>
+  </div>`;
+  renderUnitHistory(unit);
+  document.getElementById('overlay').classList.add('open');
+  document.getElementById('panel').classList.add('open');
 }
 
 async function loadData() {
