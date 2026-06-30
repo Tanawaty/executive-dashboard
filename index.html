@@ -234,15 +234,15 @@ function renderDashboard(rows) {
   const eval30=rows.filter(r=>r.statusKey==='eval30').length;
   const active=rows.filter(r=>r.statusKey==='active').length;
 
-  const alerts=[];
+  const alertsRecruit=[], alertsEval=[];
   rows.forEach(r=>{
-    if (r.stRecruit==='อยู่ระหว่างสรรหา') alerts.push({cls:'ac-amber',icon:'🔍',title:`อยู่ระหว่างสรรหา`,sub:`${r['ตำแหน่ง']} — ${r['ชื่อ-สกุล']}`});
-    else if (r.statusKey==='expired') alerts.push({cls:'ac-red',icon:'🔴',title:`หมดวาระแล้ว ${Math.abs(r.daysToEnd)} วัน`,sub:`${r['ตำแหน่ง']} — ${r['ชื่อ-สกุล']}`});
-    else if (r.statusKey==='recruit180') alerts.push({cls:'ac-amber',icon:'🟡',title:`ใกล้หมดวาระ เหลือ ${r.daysToEnd} วัน (${fmtDate(r.end)})`,sub:`${r['ตำแหน่ง']} — ${r['ชื่อ-สกุล']}`});
-    if (r.stEval1==='อยู่ระหว่างประเมิน') alerts.push({cls:'ac-blue',icon:'📋',title:`อยู่ระหว่างประเมิน 1 ปี`,sub:`${r['ตำแหน่ง']} — ${r['ชื่อ-สกุล']}`});
-    else if (r.eval1){const d=daysDiff(TODAY,r.eval1);if(d>=0&&d<=60) alerts.push({cls:'ac-blue',icon:'🔵',title:`ประเมิน 1 ปี ใน ${d} วัน (${fmtDate(r.eval1)})`,sub:`${r['ตำแหน่ง']} — ${r['ชื่อ-สกุล']}`});}
-    if (r.stEval3==='อยู่ระหว่างประเมิน') alerts.push({cls:'ac-blue',icon:'📋',title:`อยู่ระหว่างประเมิน 3 ปี`,sub:`${r['ตำแหน่ง']} — ${r['ชื่อ-สกุล']}`});
-    else if (r.eval3){const d=daysDiff(TODAY,r.eval3);if(d>=0&&d<=60) alerts.push({cls:'ac-blue',icon:'🔵',title:`ประเมิน 3 ปี ใน ${d} วัน (${fmtDate(r.eval3)})`,sub:`${r['ตำแหน่ง']} — ${r['ชื่อ-สกุล']}`});}
+    if (r.stRecruit==='อยู่ระหว่างสรรหา') alertsRecruit.push({cls:'ac-amber',icon:'🔍',title:`อยู่ระหว่างสรรหา`,sub:`${r['ตำแหน่ง']} — ${r['ชื่อ-สกุล']}`});
+    else if (r.statusKey==='expired') alertsRecruit.push({cls:'ac-red',icon:'🔴',title:`หมดวาระแล้ว ${Math.abs(r.daysToEnd)} วัน`,sub:`${r['ตำแหน่ง']} — ${r['ชื่อ-สกุล']}`});
+    else if (r.statusKey==='recruit180') alertsRecruit.push({cls:'ac-amber',icon:'🟡',title:`ใกล้หมดวาระ เหลือ ${r.daysToEnd} วัน (${fmtDate(r.end)})`,sub:`${r['ตำแหน่ง']} — ${r['ชื่อ-สกุล']}`});
+    if (r.stEval1==='อยู่ระหว่างประเมิน') alertsEval.push({cls:'ac-blue',icon:'📋',title:`อยู่ระหว่างประเมิน 1 ปี`,sub:`${r['ตำแหน่ง']} — ${r['ชื่อ-สกุล']}`});
+    else if (r.eval1){const d=daysDiff(TODAY,r.eval1);if(d>=0&&d<=60) alertsEval.push({cls:'ac-blue',icon:'🔵',title:`ประเมิน 1 ปี ใน ${d} วัน (${fmtDate(r.eval1)})`,sub:`${r['ตำแหน่ง']} — ${r['ชื่อ-สกุล']}`});}
+    if (r.stEval3==='อยู่ระหว่างประเมิน') alertsEval.push({cls:'ac-blue',icon:'📋',title:`อยู่ระหว่างประเมิน 3 ปี`,sub:`${r['ตำแหน่ง']} — ${r['ชื่อ-สกุล']}`});
+    else if (r.eval3){const d=daysDiff(TODAY,r.eval3);if(d>=0&&d<=60) alertsEval.push({cls:'ac-blue',icon:'🔵',title:`ประเมิน 3 ปี ใน ${d} วัน (${fmtDate(r.eval3)})`,sub:`${r['ตำแหน่ง']} — ${r['ชื่อ-สกุล']}`});}
   });
 
   document.getElementById('main').innerHTML = `
@@ -253,8 +253,10 @@ function renderDashboard(rows) {
     <div class="metric m-eval"><div class="m-label">ใกล้รอบประเมิน</div><div class="m-value">${eval30}</div><div class="m-sub">≤ 60 วัน</div></div>
     <div class="metric m-ok"><div class="m-label">ปกติ</div><div class="m-value">${active}</div><div class="m-sub">ตำแหน่ง</div></div>
   </div>
-  <div class="sec-title">🔔 แจ้งเตือนเร่งด่วน</div>
-  <div class="alerts-grid">${alerts.length===0?'<p class="no-alerts">✓ ไม่มีการแจ้งเตือนเร่งด่วน</p>':alerts.map(a=>`<div class="alert-card ${a.cls}"><div class="ac-icon">${a.icon}</div><div><div class="ac-title">${a.title}</div><div class="ac-sub">${a.sub}</div></div></div>`).join('')}</div>
+  <div class="sec-title">🔔 แจ้งเตือนเร่งด่วน — การสรรหา</div>
+  <div class="alerts-grid">${alertsRecruit.length===0?'<p class="no-alerts">✓ ไม่มีการแจ้งเตือนด้านการสรรหา</p>':alertsRecruit.map(a=>`<div class="alert-card ${a.cls}"><div class="ac-icon">${a.icon}</div><div><div class="ac-title">${a.title}</div><div class="ac-sub">${a.sub}</div></div></div>`).join('')}</div>
+  <div class="sec-title">🔔 แจ้งเตือนเร่งด่วน — การประเมิน</div>
+  <div class="alerts-grid">${alertsEval.length===0?'<p class="no-alerts">✓ ไม่มีการแจ้งเตือนด้านการประเมิน</p>':alertsEval.map(a=>`<div class="alert-card ${a.cls}"><div class="ac-icon">${a.icon}</div><div><div class="ac-title">${a.title}</div><div class="ac-sub">${a.sub}</div></div></div>`).join('')}</div>
   <div class="filter-tabs">
     <button class="ftab active" id="tab-all" onclick="setTab('all')">ทั้งหมด</button>
     <button class="ftab" id="tab-recruit" onclick="setTab('recruit')">🔍 การสรรหา</button>

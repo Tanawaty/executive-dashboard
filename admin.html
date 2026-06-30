@@ -200,6 +200,7 @@ td.date{font-size:12px;color:var(--text-2);white-space:nowrap}
     </div>
     <div class="hdr-right">
       <div class="chip" id="today-chip"></div>
+      <button class="btn btn-primary" onclick="openAddPanel()">➕ เพิ่มตำแหน่งใหม่</button>
       <button class="btn btn-ghost" onclick="loadData()">↺ รีเฟรช</button>
     </div>
   </div>
@@ -222,6 +223,35 @@ td.date{font-size:12px;color:var(--text-2);white-space:nowrap}
     <p id="panel-name">—</p>
   </div>
   <div class="panel-body" id="panel-body"></div>
+</div>
+
+<!-- Add-new-position Panel -->
+<div class="overlay" id="overlay-add" onclick="closeAddPanel()"></div>
+<div class="panel" id="panel-add">
+  <div class="panel-header">
+    <button class="panel-close" onclick="closeAddPanel()">✕</button>
+    <h3>➕ เพิ่มตำแหน่งใหม่</h3>
+    <p>กรอกข้อมูลแล้วบันทึกลง Google Sheet โดยตรง</p>
+  </div>
+  <div class="panel-body">
+    <div class="panel-section">
+      <h4>ข้อมูลตำแหน่ง</h4>
+      <div class="archive-form">
+        <label>หน่วยงาน</label>
+        <input type="text" id="add-unit" placeholder="เช่น คณะวิศวกรรมศาสตร์">
+        <label>ตำแหน่ง</label>
+        <input type="text" id="add-position" placeholder="เช่น คณบดี">
+        <label>ชื่อ-สกุล</label>
+        <input type="text" id="add-name" placeholder="ชื่อ-สกุลผู้ดำรงตำแหน่ง">
+        <label>วันเริ่มต้น</label>
+        <input type="date" id="add-start">
+        <div class="save-row">
+          <button class="btn btn-primary" onclick="submitAddNew()">บันทึก</button>
+          <span class="archive-msg" id="add-msg"></span>
+        </div>
+      </div>
+    </div>
+  </div>
 </div>
 
 <script>
@@ -349,15 +379,15 @@ function renderDashboard(rows) {
   const eval30=rows.filter(r=>r.statusKey==='eval30').length;
   const active=rows.filter(r=>r.statusKey==='active').length;
 
-  const alerts=[];
+  const alertsRecruit=[], alertsEval=[];
   rows.forEach(r=>{
-    if (r.stRecruit==='อยู่ระหว่างสรรหา') alerts.push({cls:'ac-amber',icon:'🔍',title:`อยู่ระหว่างสรรหา`,sub:`${r['ตำแหน่ง']} — ${r['ชื่อ-สกุล']}`});
-    else if (r.statusKey==='expired') alerts.push({cls:'ac-red',icon:'🔴',title:`หมดวาระแล้ว ${Math.abs(r.daysToEnd)} วัน`,sub:`${r['ตำแหน่ง']} — ${r['ชื่อ-สกุล']}`});
-    else if (r.statusKey==='recruit180') alerts.push({cls:'ac-amber',icon:'🟡',title:`ใกล้หมดวาระ เหลือ ${r.daysToEnd} วัน (${fmtDate(r.end)})`,sub:`${r['ตำแหน่ง']} — ${r['ชื่อ-สกุล']}`});
-    if (r.stEval1==='อยู่ระหว่างประเมิน') alerts.push({cls:'ac-blue',icon:'📋',title:`อยู่ระหว่างประเมิน 1 ปี`,sub:`${r['ตำแหน่ง']} — ${r['ชื่อ-สกุล']}`});
-    else if (r.eval1){const d=daysDiff(TODAY,r.eval1);if(d>=0&&d<=60) alerts.push({cls:'ac-blue',icon:'🔵',title:`ประเมิน 1 ปี ใน ${d} วัน (${fmtDate(r.eval1)})`,sub:`${r['ตำแหน่ง']} — ${r['ชื่อ-สกุล']}`});}
-    if (r.stEval3==='อยู่ระหว่างประเมิน') alerts.push({cls:'ac-blue',icon:'📋',title:`อยู่ระหว่างประเมิน 3 ปี`,sub:`${r['ตำแหน่ง']} — ${r['ชื่อ-สกุล']}`});
-    else if (r.eval3){const d=daysDiff(TODAY,r.eval3);if(d>=0&&d<=60) alerts.push({cls:'ac-blue',icon:'🔵',title:`ประเมิน 3 ปี ใน ${d} วัน (${fmtDate(r.eval3)})`,sub:`${r['ตำแหน่ง']} — ${r['ชื่อ-สกุล']}`});}
+    if (r.stRecruit==='อยู่ระหว่างสรรหา') alertsRecruit.push({cls:'ac-amber',icon:'🔍',title:`อยู่ระหว่างสรรหา`,sub:`${r['ตำแหน่ง']} — ${r['ชื่อ-สกุล']}`});
+    else if (r.statusKey==='expired') alertsRecruit.push({cls:'ac-red',icon:'🔴',title:`หมดวาระแล้ว ${Math.abs(r.daysToEnd)} วัน`,sub:`${r['ตำแหน่ง']} — ${r['ชื่อ-สกุล']}`});
+    else if (r.statusKey==='recruit180') alertsRecruit.push({cls:'ac-amber',icon:'🟡',title:`ใกล้หมดวาระ เหลือ ${r.daysToEnd} วัน (${fmtDate(r.end)})`,sub:`${r['ตำแหน่ง']} — ${r['ชื่อ-สกุล']}`});
+    if (r.stEval1==='อยู่ระหว่างประเมิน') alertsEval.push({cls:'ac-blue',icon:'📋',title:`อยู่ระหว่างประเมิน 1 ปี`,sub:`${r['ตำแหน่ง']} — ${r['ชื่อ-สกุล']}`});
+    else if (r.eval1){const d=daysDiff(TODAY,r.eval1);if(d>=0&&d<=60) alertsEval.push({cls:'ac-blue',icon:'🔵',title:`ประเมิน 1 ปี ใน ${d} วัน (${fmtDate(r.eval1)})`,sub:`${r['ตำแหน่ง']} — ${r['ชื่อ-สกุล']}`});}
+    if (r.stEval3==='อยู่ระหว่างประเมิน') alertsEval.push({cls:'ac-blue',icon:'📋',title:`อยู่ระหว่างประเมิน 3 ปี`,sub:`${r['ตำแหน่ง']} — ${r['ชื่อ-สกุล']}`});
+    else if (r.eval3){const d=daysDiff(TODAY,r.eval3);if(d>=0&&d<=60) alertsEval.push({cls:'ac-blue',icon:'🔵',title:`ประเมิน 3 ปี ใน ${d} วัน (${fmtDate(r.eval3)})`,sub:`${r['ตำแหน่ง']} — ${r['ชื่อ-สกุล']}`});}
   });
 
   document.getElementById('main').innerHTML = `
@@ -368,8 +398,10 @@ function renderDashboard(rows) {
     <div class="metric m-eval"><div class="m-label">ใกล้รอบประเมิน</div><div class="m-value">${eval30}</div><div class="m-sub">≤ 60 วัน</div></div>
     <div class="metric m-ok"><div class="m-label">ปกติ</div><div class="m-value">${active}</div><div class="m-sub">ตำแหน่ง</div></div>
   </div>
-  <div class="sec-title">🔔 แจ้งเตือนเร่งด่วน</div>
-  <div class="alerts-grid">${alerts.length===0?'<p class="no-alerts">✓ ไม่มีการแจ้งเตือนเร่งด่วน</p>':alerts.map(a=>`<div class="alert-card ${a.cls}"><div class="ac-icon">${a.icon}</div><div><div class="ac-title">${a.title}</div><div class="ac-sub">${a.sub}</div></div></div>`).join('')}</div>
+  <div class="sec-title">🔔 แจ้งเตือนเร่งด่วน — การสรรหา</div>
+  <div class="alerts-grid">${alertsRecruit.length===0?'<p class="no-alerts">✓ ไม่มีการแจ้งเตือนด้านการสรรหา</p>':alertsRecruit.map(a=>`<div class="alert-card ${a.cls}"><div class="ac-icon">${a.icon}</div><div><div class="ac-title">${a.title}</div><div class="ac-sub">${a.sub}</div></div></div>`).join('')}</div>
+  <div class="sec-title">🔔 แจ้งเตือนเร่งด่วน — การประเมิน</div>
+  <div class="alerts-grid">${alertsEval.length===0?'<p class="no-alerts">✓ ไม่มีการแจ้งเตือนด้านการประเมิน</p>':alertsEval.map(a=>`<div class="alert-card ${a.cls}"><div class="ac-icon">${a.icon}</div><div><div class="ac-title">${a.title}</div><div class="ac-sub">${a.sub}</div></div></div>`).join('')}</div>
   <div class="filter-tabs">
     <button class="ftab active" id="tab-all" onclick="setTab('all')">ทั้งหมด</button>
     <button class="ftab" id="tab-recruit" onclick="setTab('recruit')">🔍 การสรรหา</button>
@@ -710,6 +742,42 @@ function renderAlertSection() {
 function closePanel() {
   document.getElementById('overlay').classList.remove('open');
   document.getElementById('panel').classList.remove('open');
+}
+
+/* ── Add-new-position Panel ── */
+function openAddPanel() {
+  document.getElementById('add-unit').value='';
+  document.getElementById('add-position').value='';
+  document.getElementById('add-name').value='';
+  document.getElementById('add-start').value='';
+  document.getElementById('add-msg').textContent='';
+  document.getElementById('overlay-add').classList.add('open');
+  document.getElementById('panel-add').classList.add('open');
+}
+
+function closeAddPanel() {
+  document.getElementById('overlay-add').classList.remove('open');
+  document.getElementById('panel-add').classList.remove('open');
+}
+
+async function submitAddNew() {
+  const msg = document.getElementById('add-msg');
+  const unit = document.getElementById('add-unit').value.trim();
+  const position = document.getElementById('add-position').value.trim();
+  const name = document.getElementById('add-name').value.trim();
+  const start = document.getElementById('add-start').value;
+
+  if (!position || !start) { msg.textContent='กรุณากรอกอย่างน้อย "ตำแหน่ง" และ "วันเริ่มต้น"'; msg.style.color='var(--red)'; return; }
+
+  msg.textContent='กำลังบันทึก…'; msg.style.color='var(--text-3)';
+  try {
+    await fetch(API, { method:'POST', body: JSON.stringify({ action:'addNew', unit, position, name, start }) });
+    msg.textContent='✓ บันทึกแล้ว กำลังโหลดข้อมูลใหม่…'; msg.style.color='var(--teal)';
+    closeAddPanel();
+    await loadData();
+  } catch(e) {
+    msg.textContent='เกิดข้อผิดพลาด กรุณาลองใหม่'; msg.style.color='var(--red)';
+  }
 }
 
 async function loadData() {
