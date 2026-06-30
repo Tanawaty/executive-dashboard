@@ -337,7 +337,8 @@ function calcRow(r, idx) {
   const stEval1   = r['สถานะประเมิน_1ปี'] || '—';
   const stEval3   = r['สถานะประเมิน_3ปี'] || '—';
 
-  return { ...r, _idx:idx, start, end, eval1, eval3, daysToEnd, pct, statusKey, stRecruit, stEval1, stEval3 };
+  return { ...r, _idx:idx, start, end, eval1, eval3, daysToEnd, pct, statusKey, stRecruit, stEval1, stEval3,
+            unit:r['หน่วยงาน']||'', pos:r['ตำแหน่ง']||'', name:r['ชื่อ-สกุล']||'' };
 }
 
 function statusBadge(row) {
@@ -428,9 +429,9 @@ function renderDashboard(rows) {
   <div class="table-wrap">
     <table>
       <thead><tr>
-        <th style="min-width:140px">หน่วยงาน</th>
-        <th style="min-width:180px">ตำแหน่ง</th>
-        <th style="min-width:160px">ชื่อ-สกุล</th>
+        <th style="min-width:140px" class="sortable" onclick="sortBy('unit')" id="th-unit">หน่วยงาน<span class="sort-icon">⇅</span></th>
+        <th style="min-width:180px" class="sortable" onclick="sortBy('pos')" id="th-pos">ตำแหน่ง<span class="sort-icon">⇅</span></th>
+        <th style="min-width:160px" class="sortable" onclick="sortBy('name')" id="th-name">ชื่อ-สกุล<span class="sort-icon">⇅</span></th>
         <th class="sortable" onclick="sortBy('start')" id="th-start">วันเริ่มต้น<span class="sort-icon">⇅</span></th>
         <th class="sortable" onclick="sortBy('end')" id="th-end">วันสิ้นสุด<span class="sort-icon">⇅</span></th>
         <th style="min-width:130px" class="sortable" onclick="sortBy('pct')" id="th-pct">ความคืบหน้า<span class="sort-icon">⇅</span></th>
@@ -460,7 +461,7 @@ function setTab(tab) {
 
 function sortBy(col) {
   if (_sortCol===col) _sortDir *= -1; else { _sortCol=col; _sortDir=1; }
-  ['start','end','pct','eval1','eval3'].forEach(c=>{
+  ['unit','pos','name','start','end','pct','eval1','eval3'].forEach(c=>{
     const th=document.getElementById('th-'+c);
     if(!th) return;
     th.classList.remove('sort-asc','sort-desc');
@@ -507,12 +508,19 @@ function applyFilter() {
   if (_sortCol) {
     rows = [...rows].sort((a,b)=>{
       let va = a[_sortCol], vb = b[_sortCol];
-      if (va instanceof Date && vb instanceof Date) { va=va.getTime(); vb=vb.getTime(); }
-      else if (typeof va==='number' && typeof vb==='number') {}
-      else { va = va||0; vb = vb||0; }
-      if (va===null||va===undefined) va=Infinity;
-      if (vb===null||vb===undefined) vb=Infinity;
-      return (va-vb)*_sortDir;
+      if (va instanceof Date || vb instanceof Date) {
+        va = va instanceof Date ? va.getTime() : Infinity;
+        vb = vb instanceof Date ? vb.getTime() : Infinity;
+        return (va-vb)*_sortDir;
+      }
+      if (typeof va==='number' || typeof vb==='number') {
+        va = typeof va==='number' ? va : Infinity;
+        vb = typeof vb==='number' ? vb : Infinity;
+        return (va-vb)*_sortDir;
+      }
+      va = (va||'').toString();
+      vb = (vb||'').toString();
+      return va.localeCompare(vb,'th') * _sortDir;
     });
   }
 
@@ -689,6 +697,11 @@ async function archiveAndReplace(idx) {
   const newStart= document.getElementById('ar-newstart').value;
 
   if (!endDate) { msg.textContent='กรุณาระบุวันสิ้นสุดจริง'; msg.style.color='var(--red)'; return; }
+
+  if (findDuplicateHistory(r['หน่วยงาน']||'', r['ตำแหน่ง']||'', r['ชื่อ-สกุล']||'', _toISO(r.start))) {
+    if (!confirm('พบรายการที่ตรงกันในชีตประวัติอยู่แล้ว (อาจเคย "บันทึกประวัติ" รายการนี้ไปแล้ว)\n\nต้องการบันทึกซ้ำต่อไปหรือไม่?')) return;
+  }
+
   if (!confirm(`ยืนยันบันทึกประวัติของ "${r['ชื่อ-สกุล']}" (${r['ตำแหน่ง']}) และเริ่มวาระใหม่?`)) return;
 
   msg.textContent='กำลังบันทึก…'; msg.style.color='var(--text-3)';
@@ -761,6 +774,22 @@ function closeAddPanel() {
   document.getElementById('panel-add').classList.remove('open');
 }
 
+function _toISO(d) { return d ? d.toISOString().slice(0,10) : ''; }
+
+function findDuplicateCurrent(unit, pos, name, startStr) {
+  return (window._rows||[]).findIndex(r =>
+    (r['หน่วยงาน']||'')===unit && (r['ตำแหน่ง']||'')===pos &&
+    (r['ชื่อ-สกุล']||'')===name && _toISO(r.start)===startStr
+  );
+}
+
+function findDuplicateHistory(unit, pos, name, startStr) {
+  return (window._history||[]).some(h =>
+    (h['หน่วยงาน']||'')===unit && (h['ตำแหน่ง']||'')===pos &&
+    (h['ชื่อ-สกุล']||'')===name && _toISO(parseDate(h['วันเริ่มต้น']))===startStr
+  );
+}
+
 async function submitAddNew() {
   const msg = document.getElementById('add-msg');
   const unit = document.getElementById('add-unit').value.trim();
@@ -769,6 +798,18 @@ async function submitAddNew() {
   const start = document.getElementById('add-start').value;
 
   if (!position || !start) { msg.textContent='กรุณากรอกอย่างน้อย "ตำแหน่ง" และ "วันเริ่มต้น"'; msg.style.color='var(--red)'; return; }
+
+  const dupIdx = findDuplicateCurrent(unit, position, name, start);
+  if (dupIdx !== -1) {
+    const openExisting = confirm('พบรายการที่ตรงกันอยู่แล้ว (หน่วยงาน/ตำแหน่ง/ชื่อ/วันเริ่มต้นเดียวกัน)\n\nกด "ตกลง" เพื่อเปิดรายการเดิมไปแก้ไขแทน\nกด "ยกเลิก" เพื่อบันทึกเป็นรายการใหม่ต่อไป');
+    if (openExisting) {
+      closeAddPanel();
+      openPanel(dupIdx);
+      return;
+    }
+  } else if (findDuplicateHistory(unit, position, name, start)) {
+    if (!confirm('พบรายการที่ตรงกันในชีตประวัติแล้ว ต้องการบันทึกเป็นรายการใหม่ต่อไปหรือไม่?')) return;
+  }
 
   msg.textContent='กำลังบันทึก…'; msg.style.color='var(--text-3)';
   try {
